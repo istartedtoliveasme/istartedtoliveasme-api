@@ -1,21 +1,22 @@
 package main
 
 import (
+	"api/configs"
 	"api/routers"
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"log"
 )
 
-func getRouterConfig() *gin.Engine  {
-	routerConfig := gin.Default()
-	routerConfig.TrustedPlatform = gin.PlatformGoogleAppEngine
-	routerConfig.SetTrustedProxies([]string{"http://localhost", "0.0.0.0"})
-	gin.SetMode(gin.TestMode)
-
-	return routerConfig
+func loadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 }
 
 func main() {
-	router := routers.GetV1Routers(getRouterConfig())
+	loadEnv()
+	router := routers.GetV1Routers(configs.GetRouterConfig())
 
 	router.Run(":1337") // listen and serve on 0.0.0.0:1337 (for windows "localhost:8080")
 }
