@@ -1,6 +1,7 @@
 package userModel
 
 import (
+	"api/constants"
 	"api/database/structures"
 	"errors"
 	"fmt"
@@ -13,8 +14,8 @@ type UserModel interface {
 
 // GetByUserName :: Creating a mock response
 func GetByUserName(username string) (structures.User, error) {
-	if username != "istartedtoliveasme" {
-		return structures.User{}, errors.New("Invalid username!")
+	if message := fmt.Sprintf("%s!", constants.InvalidUsername); username != "istartedtoliveasme" {
+		return structures.User{}, errors.New(message)
 	}
 	return structures.User{
 		Id:        rand.Int(),
