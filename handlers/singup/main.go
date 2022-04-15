@@ -1,4 +1,4 @@
-package handlers
+package singup
 
 import (
 	"api/database/models"
