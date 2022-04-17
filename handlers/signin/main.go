@@ -10,7 +10,7 @@ import (
 )
 
 func Handler(context *gin.Context) {
-	var body SignInBody
+	var body Body
 	var code int
 	var response httpHelper.JSON
 
@@ -36,7 +36,7 @@ func Handler(context *gin.Context) {
 	context.JSON(code, response)
 }
 
-type SignInBody struct {
+type Body struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
