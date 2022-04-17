@@ -1,6 +1,7 @@
 package signup
 
 import (
+	"api/constants"
 	userModel "api/database/models"
 	"api/database/structures"
 	"api/helpers"
@@ -8,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Handler(context *gin.Context)  {
+func Handler(context *gin.Context) {
 	var body body
 	var code int
 	var response httpHelper.JSON
@@ -19,11 +20,13 @@ func Handler(context *gin.Context)  {
 		code, response = helpers.BadRequest([]error{err})
 	}
 
-	_, err = userModel.Create(structures.User{
-		FirstName: body.firstName,
-		LastName: body.lastName,
-		Email: body.email,
+	result, err := userModel.Create(structures.User{
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Email:     body.Email,
 	})
+
+	code, response = helpers.OkRequest(constants.RegisteredSuccess, result)
 
 	if err != nil {
 		code, response = helpers.BadRequest([]error{err})
@@ -33,7 +36,7 @@ func Handler(context *gin.Context)  {
 }
 
 type body struct {
-	firstName string `form:"firstName" json:"username" binding:"required"`
-	lastName string `form:"lastName" json:"lastName" binding:"required"`
-	email string `form:"email" json:"email" binding:"required"`
+	FirstName string `form:"firstName" json:"firstName" binding:"required"`
+	LastName  string `form:"lastName" json:"lastName" binding:"required"`
+	Email     string `form:"email" json:"email" binding:"required"`
 }
