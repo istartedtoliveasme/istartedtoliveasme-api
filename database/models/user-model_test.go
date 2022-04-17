@@ -15,7 +15,7 @@ func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 	got, err := GetByUserName(fakeRandomUsername)
 
 	// THEN I should be able to see an error message
-	assert.EqualError(t, err, fmt.Sprintf("%s!", constants.InvalidUsername))
+	assert.EqualError(t, err, fmt.Sprintf("%s!", constants.InvalidUserName))
 	// AND I should not be able to see any result
 	assert.Empty(t, got)
 }

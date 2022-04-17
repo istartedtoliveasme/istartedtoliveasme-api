@@ -10,32 +10,33 @@ import (
 )
 
 func Handler(context *gin.Context) {
-	var body body
+	var body Body
 	var code int
 	var response httpHelper.JSON
 
-	err := context.ShouldBindJSON(&body)
-
-	if err != nil {
+	if err := context.ShouldBindJSON(&body); err != nil {
 		code, response = helpers.BadRequest([]error{err})
+		context.JSON(code, response)
+	} else {
+
+		result, err := userModel.Create(structures.User{
+			FirstName: body.FirstName,
+			LastName: body.LastName,
+			Email: body.Email,
+		})
+
+		code, response = helpers.OkRequest(constants.RegisteredSuccess, result)
+
+		if err != nil {
+			code, response = helpers.BadRequest([]error{err})
+		}
+
+		context.JSON(code, response)
+
 	}
-
-	result, err := userModel.Create(structures.User{
-		FirstName: body.FirstName,
-		LastName:  body.LastName,
-		Email:     body.Email,
-	})
-
-	code, response = helpers.OkRequest(constants.RegisteredSuccess, result)
-
-	if err != nil {
-		code, response = helpers.BadRequest([]error{err})
-	}
-
-	context.JSON(code, response)
 }
 
-type body struct {
+type Body struct {
 	FirstName string `form:"firstName" json:"firstName" binding:"required"`
 	LastName  string `form:"lastName" json:"lastName" binding:"required"`
 	Email     string `form:"email" json:"email" binding:"required"`

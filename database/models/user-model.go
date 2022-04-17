@@ -16,7 +16,7 @@ type UserModel interface {
 
 // GetByUserName :: Creating a mock response
 func GetByUserName(username string) (structures.User, error) {
-	if message := fmt.Sprintf("%s!", constants.InvalidUsername); username != "istartedtoliveasme" {
+	if message := fmt.Sprintf("%s!", constants.InvalidUserName); username != "istartedtoliveasme" {
 		return structures.User{}, errors.New(message)
 	}
 	return structures.User{
@@ -24,11 +24,14 @@ func GetByUserName(username string) (structures.User, error) {
 		FirstName: "John",
 		LastName:  "Doe",
 		Email:     fmt.Sprintf("%s@gmail.com", username),
-		Password:  strconv.Itoa(rand.Int()),
+		Password:  "123456",
 	}, nil
 }
 
 func Create(user structures.User) (structures.User, error) {
+	if user.Email == "istartedtoliveasme@gmail.com" {
+		return structures.User{}, errors.New(constants.ExistUserName)
+	}
 	return structures.User{
 		Id:        rand.Int(),
 		FirstName: user.FirstName,
