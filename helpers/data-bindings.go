@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"api/helpers/httpHelper"
+	httpHelper "api/helpers/httpHelper"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

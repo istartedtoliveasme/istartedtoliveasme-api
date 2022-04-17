@@ -2,17 +2,17 @@ package routers
 
 import (
 	"api/handlers"
-	"api/handlers/singup"
+	"api/handlers/signin"
+	"api/handlers/signup"
 	"github.com/gin-gonic/gin"
 )
 
-func GetV1Routers(router *gin.Engine) *gin.Engine {
+func GetV1Routers(router *gin.Engine) {
 
-	v1 := router.Group("/v1")
+	v1 := router.Group(GetURLPath(Version1))
 	{
-		v1.POST("/login", singup.LoginHandler)
-		v1.GET("/ping", handlers.PingHandler)
+		v1.POST(GetURLPath(SignIn), signin.Handler)
+		v1.GET(GetURLPath(Ping), handlers.PingHandler)
+		v1.GET(GetURLPath(SignUp), signup.Handler)
 	}
-
-	return router
 }
