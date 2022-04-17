@@ -13,6 +13,6 @@ func GetV1Routers(router *gin.Engine) {
 	{
 		v1.POST(GetURLPath(SignIn), signin.Handler)
 		v1.GET(GetURLPath(Ping), handlers.PingHandler)
-		v1.GET(GetURLPath(SignUp), signup.Handler)
+		v1.POST(GetURLPath(SignUp), signup.Handler)
 	}
 }

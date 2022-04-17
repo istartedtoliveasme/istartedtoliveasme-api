@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 )
 
 type UserModel interface {
@@ -23,7 +24,7 @@ func GetByUserName(username string) (structures.User, error) {
 		FirstName: "John",
 		LastName:  "Doe",
 		Email:     fmt.Sprintf("%s@gmail.com", username),
-		Password:  "123456",
+		Password:  strconv.Itoa(rand.Int()),
 	}, nil
 }
 
@@ -33,6 +34,6 @@ func Create(user structures.User) (structures.User, error) {
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
-		Password:  "123456",
+		Password:  strconv.Itoa(rand.Int()),
 	}, nil
 }
