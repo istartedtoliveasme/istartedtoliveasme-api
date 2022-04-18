@@ -1,8 +1,11 @@
 package http_tests
 
 import (
+	"api/constants"
 	"api/helpers/httpHelper"
 	"api/routers"
+	"bytes"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
@@ -25,23 +28,75 @@ func TestSignInShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "error")
 }
 
+func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
+	// GIVEN the initial dependency is declared
+	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignIn)
+	router := gin.Default()
+	routers.GetV1Routers(router)
+	w := httptest.NewRecorder()
+	// AND I have the username
+	fakeUsername := "istartedtoliveasme"
+	// AND I have a non-existing password
+	fakePassword := strconv.Itoa(rand.Int())
+	// AND I have the serialized json format of the API body
+	jsonBody := httpHelper.JSON{
+		"username": fakeUsername,
+		"password": fakePassword,
+	}
+
+	jsonByte, err := json.Marshal(jsonBody)
+	// AND Should throw error when fail to parse struct
+	if err != nil {
+		t.Error(err)
+	}
+
+	jsonBuffer := bytes.NewBuffer(jsonByte)
+
+	// WHEN I invoke the http request
+	req, _ := http.NewRequest(http.MethodPost, url, jsonBuffer)
+
+	router.ServeHTTP(w, req)
+
+	// THEN I should be able to verify the API response status code
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	// AND Should be able to see the error list
+	assert.Contains(t, w.Body.String(), "errors")
+	// AND Should be able to see the error message
+	assert.Contains(t, w.Body.String(), constants.MismatchPassword)
+}
+
 func TestSignInShouldAuthorized(t *testing.T) {
 	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignIn)
+	router := gin.Default()
+	routers.GetV1Routers(router)
+
 	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
 
 	fakeUsername := "istartedtoliveasme"
 	fakePassword := strconv.Itoa(rand.Int())
-	c.JSON(http.StatusOK, httpHelper.JSON{
-		"username": fakeUsername,
-		"password": fakePassword,
-	})
 
-	c.Request, _ = http.NewRequest(http.MethodPost, url, nil)
+	jsonBody := httpHelper.JSON{
+		"username": fakeUsername,
+		"password": "123456",
+	}
+
+	jsonByte, err := json.Marshal(jsonBody)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	jsonBuffer := bytes.NewBuffer(jsonByte)
+
+	req, _ := http.NewRequest(http.MethodPost, url, jsonBuffer)
+
+	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "username")
-	assert.Contains(t, w.Body.String(), "password")
-	assert.Contains(t, w.Body.String(), fakeUsername)
-	assert.Contains(t, w.Body.String(), fakePassword)
+	assert.Contains(t, w.Body.String(), "Id")
+	assert.Contains(t, w.Body.String(), "FirstName")
+	assert.Contains(t, w.Body.String(), "LastName")
+	assert.Contains(t, w.Body.String(), "Email")
+	assert.Contains(t, w.Body.String(), fakeUsername+"@gmail.com")
+	assert.NotContains(t, w.Body.String(), fakePassword)
 }
