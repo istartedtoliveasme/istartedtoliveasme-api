@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/joho/godotenv v1.4.0
-	github.com/neo4j/neo4j-go-driver v1.8.3
 	github.com/stretchr/testify v1.7.1
 )
 

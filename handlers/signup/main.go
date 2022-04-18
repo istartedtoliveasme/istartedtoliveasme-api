@@ -1,6 +1,7 @@
 package signup
 
 import (
+	"api/configs"
 	"api/constants"
 	userModel "api/database/models"
 	"api/database/structures"
@@ -13,16 +14,17 @@ func Handler(context *gin.Context) {
 	var body Body
 	var code int
 	var response httpHelper.JSON
+	_, session := configs.Neo4jDriver()
 
 	if err := context.ShouldBindJSON(&body); err != nil {
 		code, response = helpers.BadRequest([]error{err})
 		context.JSON(code, response)
 	} else {
 
-		result, err := userModel.Create(structures.User{
+		result, err := userModel.Create(session)(structures.User{
 			FirstName: body.FirstName,
-			LastName: body.LastName,
-			Email: body.Email,
+			LastName:  body.LastName,
+			Email:     body.Email,
 		})
 
 		code, response = helpers.OkRequest(constants.RegisteredSuccess, result)
@@ -31,6 +33,7 @@ func Handler(context *gin.Context) {
 			code, response = helpers.BadRequest([]error{err})
 		}
 
+		session.Close()
 		context.JSON(code, response)
 
 	}

@@ -3,40 +3,72 @@ package userModel
 import (
 	"api/constants"
 	"api/database/structures"
+	"api/helpers/httpHelper"
 	"errors"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
-	"strconv"
 )
 
 type UserModel interface {
-	GetByUserName(username string) (structures.User, error)
-	Create(user structures.User) (structures.User, error)
+	Cypher(transaction neo4j.Transaction) ModelCypherQuery
 }
 
-// GetByUserName :: Creating a mock response
-func GetByUserName(username string) (structures.User, error) {
-	if message := fmt.Sprintf("%s!", constants.InvalidUserName); username != "istartedtoliveasme" {
-		return structures.User{}, errors.New(message)
-	}
-	return structures.User{
-		Id:        rand.Int(),
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     fmt.Sprintf("%s@gmail.com", username),
-		Password:  "123456",
-	}, nil
+type ModelCypherQuery interface {
+	GetByEmail(tx neo4j.Transaction) func(email string) (neo4j.Result, error)
+	Create(tx neo4j.Transaction) func(user structures.User) (neo4j.Result, error)
 }
 
-func Create(user structures.User) (structures.User, error) {
-	if user.Email == "istartedtoliveasme@gmail.com" {
-		return structures.User{}, errors.New(constants.ExistUserName)
+func GetByEmail(tx neo4j.Session) func(email string) (neo4j.Result, error) {
+	return func(email string) (neo4j.Result, error) {
+		record, err := tx.Run("MATCH (u:User { email: $email }) RETURN u", httpHelper.JSON{"email": email})
+
+		// GUARD CLAUSE
+		if err != nil {
+			return nil, err
+		}
+
+		// TODO :: to resolve -> return record found
+		if record.Next() {
+			record, ok := record.Record().Get("email")
+
+			if !ok {
+				return nil, errors.New(constants.GetRecordFailed)
+			}
+
+			if message := fmt.Sprintf("%s!", constants.InvalidEmail); record != email {
+				return nil, errors.New(message)
+			}
+		}
+
+		return record, nil
 	}
-	return structures.User{
-		Id:        rand.Int(),
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Password:  strconv.Itoa(rand.Int()),
-	}, nil
+}
+
+func Create(tx neo4j.Session) func(user structures.User) (neo4j.Result, error) {
+	return func(user structures.User) (neo4j.Result, error) {
+		getByEmailRecord, err := GetByEmail(tx)(user.Email)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if getByEmailRecord.Next() == true {
+			return nil, errors.New(constants.ExistUserName)
+		}
+
+		records, err := tx.Run("CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u", httpHelper.JSON{
+			"id":        rand.Int(),
+			"firstName": user.FirstName,
+			"lastName":  user.LastName,
+			"email":     user.Email,
+			"password":  user.Password,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return records, nil
+	}
 }
