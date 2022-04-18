@@ -12,10 +12,10 @@ func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 	fakeRandomUsername := "randomUserName"
 
 	// WHEN I call the function with the fake username
-	got, err := GetByUserName(fakeRandomUsername)
+	got, err := GetByEmail(fakeRandomUsername)
 
 	// THEN I should be able to see an error message
-	assert.EqualError(t, err, fmt.Sprintf("%s!", constants.InvalidUserName))
+	assert.EqualError(t, err, fmt.Sprintf("%s!", constants.InvalidEmail))
 	// AND I should not be able to see any result
 	assert.Empty(t, got)
 }
@@ -25,7 +25,7 @@ func TestUserModelShouldNotThrowError(t *testing.T) {
 	fakeUsername := "istartedtoliveasme"
 
 	// WHEN I call the function with the fake username
-	got, err := GetByUserName(fakeUsername)
+	got, err := GetByEmail(fakeUsername)
 
 	// THEN I should not be able to see an error message
 	assert.NoError(t, err)
@@ -38,7 +38,7 @@ func TestUserModelShouldSeeResultValue(t *testing.T) {
 	fakeUsername := "istartedtoliveasme"
 
 	// WHEN I call the function with the fake username
-	got, _ := GetByUserName(fakeUsername)
+	got, _ := GetByEmail(fakeUsername)
 
 	// THEN I should be able to see the email containing the fake username
 	assert.Contains(t, got.Email, fakeUsername)
