@@ -57,7 +57,7 @@ func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
-	// THEN I should be able to verify the API response status code
+	// THEN I should be able to verify the API responses status code
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	// AND Should be able to see the error list
 	assert.Contains(t, w.Body.String(), "errors")
