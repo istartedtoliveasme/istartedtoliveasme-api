@@ -3,7 +3,7 @@ package constants
 const (
 	InvalidEmail     = "Invalid Email"
 	MismatchPassword = "Password doesn't match"
-	ExistUserName    = "Username already exist"
+	ExistUserName    = "Email already exist"
 	RequiredFirstName = "First Name is required"
 	RequiredLastName = "Last Name is required"
 	RequiredEmail = "Email is required"

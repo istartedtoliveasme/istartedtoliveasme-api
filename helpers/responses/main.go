@@ -1,11 +1,11 @@
-package helpers
+package responses
 
 import (
-	httpHelper "api/helpers/httpHelper"
+	"api/helpers/httpHelper"
 	"net/http"
 )
 
-func BadRequest(errs []error) (int, httpHelper.JSON) {
+func BadRequest(message string, errs []error) (int, httpHelper.JSON) {
 	var errorMessages []string
 
 	for _, eachError := range errs {
@@ -13,7 +13,8 @@ func BadRequest(errs []error) (int, httpHelper.JSON) {
 	}
 
 	return http.StatusBadRequest, httpHelper.JSON{
-		"errors": errorMessages,
+		"errors":  errorMessages,
+		"message": message,
 	}
 }
 

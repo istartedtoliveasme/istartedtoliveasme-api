@@ -5,7 +5,6 @@ import (
 	"api/database/structures"
 	"api/helpers/httpHelper"
 	"errors"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 )
@@ -21,27 +20,7 @@ type ModelCypherQuery interface {
 
 func GetByEmail(tx neo4j.Session) func(email string) (neo4j.Result, error) {
 	return func(email string) (neo4j.Result, error) {
-		record, err := tx.Run("MATCH (u:User { email: $email }) RETURN u", httpHelper.JSON{"email": email})
-
-		// GUARD CLAUSE
-		if err != nil {
-			return nil, err
-		}
-
-		// TODO :: to resolve -> return record found
-		if record.Next() {
-			record, ok := record.Record().Get("email")
-
-			if !ok {
-				return nil, errors.New(constants.GetRecordFailed)
-			}
-
-			if message := fmt.Sprintf("%s!", constants.InvalidEmail); record != email {
-				return nil, errors.New(message)
-			}
-		}
-
-		return record, nil
+		return tx.Run("MATCH (u:User { email: $email }) RETURN u LIMIT 1", httpHelper.JSON{"email": email})
 	}
 }
 
@@ -53,7 +32,7 @@ func Create(tx neo4j.Session) func(user structures.User) (neo4j.Result, error) {
 			return nil, err
 		}
 
-		if getByEmailRecord.Next() == true {
+		if getByEmailRecord.Next() {
 			return nil, errors.New(constants.ExistUserName)
 		}
 

@@ -5,8 +5,8 @@ import (
 	"api/constants"
 	userModel "api/database/models"
 	"api/database/structures"
-	"api/helpers"
 	"api/helpers/httpHelper"
+	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,7 +17,7 @@ func Handler(context *gin.Context) {
 	_, session := configs.Neo4jDriver()
 
 	if err := context.ShouldBindJSON(&body); err != nil {
-		code, response = helpers.BadRequest([]error{err})
+		code, response = responses.BadRequest(constants.ExistUserName, []error{err})
 		context.JSON(code, response)
 	} else {
 
@@ -27,10 +27,10 @@ func Handler(context *gin.Context) {
 			Email:     body.Email,
 		})
 
-		code, response = helpers.OkRequest(constants.RegisteredSuccess, result)
+		code, response = responses.OkRequest(constants.RegisteredSuccess, result)
 
 		if err != nil {
-			code, response = helpers.BadRequest([]error{err})
+			code, response = responses.BadRequest(constants.ExistUserName, []error{err})
 		}
 
 		session.Close()
