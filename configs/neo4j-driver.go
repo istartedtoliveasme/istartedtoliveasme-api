@@ -1,6 +1,7 @@
 package configs
 
 import (
+	neo4jConstant "api/constants/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"os"
 )
@@ -8,8 +9,8 @@ import (
 func Neo4jDriver() (neo4j.Driver, neo4j.Session) {
 	// Neo4j 4.0, defaults to no TLS therefore use bolt:// or neo4j://
 	// Neo4j 3.5, defaults to self-signed certificates, TLS on, therefore use bolt+ssc:// or neo4j+ssc://
-	uri := os.Getenv("NEO4J_URI")
-	auth := neo4j.BasicAuth(os.Getenv("NEO4J_USERNAME"), os.Getenv("NEO4J_PASSWORD"), "")
+	uri := os.Getenv(neo4jConstant.URI)
+	auth := neo4j.BasicAuth(os.Getenv(neo4jConstant.USERNAME), os.Getenv(neo4jConstant.PASSWORD), "")
 	// You typically have one driver instance for the entire application. The
 	// driver maintains a pool of database connections to be used by the sessions.
 	// The driver is thread safe.

@@ -3,7 +3,8 @@ package signin
 import (
 	"api/configs"
 	"api/constants"
-	"api/database/models"
+	"api/database/models/user-model"
+	"api/helpers"
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"encoding/json"
@@ -14,42 +15,57 @@ import (
 func Handler(context *gin.Context) {
 	var body Body
 	var code int
-	var response = httpHelper.JSON{}
+	var response httpHelper.JSON
 	_, session := configs.Neo4jDriver()
 
-	err := context.ShouldBindJSON(&body)
+	err := context.ShouldBind(&body)
 	if err != nil {
 		code, response = responses.BadRequest(constants.FailedAuthentication, []error{err})
 	}
 
-	code, response = signInUser(session, body, response)
+	userRecord, err := userModel.GetByEmail(session)(body.Email)
+
+	if err != nil {
+		code, response = responses.BadRequest(constants.FailedAuthentication, []error{err})
+	}
+
+	response, err = signInUser(userRecord)
+
+	if err != nil {
+		code, response = responses.BadRequest(constants.FailedAuthentication, []error{err})
+	}
 
 	context.JSON(code, response)
 }
 
-func signInUser(session neo4j.Session, body Body, response httpHelper.JSON) (int, httpHelper.JSON) {
-	record, err := userModel.GetByEmail(session)(body.Email)
-	if err != nil {
-		return responses.BadRequest(constants.FailedAuthentication, []error{err})
-	}
-
-	singleRecord, err := record.Single()
-	if singleRecord == nil || err != nil {
-		return responses.BadRequest(constants.FailedAuthentication, []error{err})
-	}
-
-	// Generate Access Token
-	accessToken, err := json.Marshal(response)
+func signInUser(userRecord neo4j.Result) (httpHelper.JSON, error) {
+	singleRecord, err := getSingleRecord(userRecord)
 
 	if err != nil {
-		return responses.BadRequest(constants.FailedAuthentication, []error{err})
+		return nil, err
+	}
+
+	data := helpers.GetSingleNodeProps(*singleRecord)
+	accessToken, err := generateAccessToken(data)
+
+	if err != nil {
+		return nil, err
 	}
 
 	// TODO :: bind profile to a struct that hides field password
-	return responses.OkRequest(constants.Success, httpHelper.JSON{
+	return httpHelper.JSON{
 		"accessToken": accessToken,
-		"profile":     httpHelper.GetJsonKey(response, "data"),
-	})
+		"profile":     data,
+	}, nil
+
+}
+
+func getSingleRecord(userRecord neo4j.Result) (*neo4j.Record, error) {
+	return userRecord.Single()
+}
+
+func generateAccessToken(response interface{}) ([]byte, error) {
+	return json.Marshal(response)
 }
 
 type Body struct {

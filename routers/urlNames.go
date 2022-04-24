@@ -5,6 +5,7 @@ const (
 	SignIn   = "signin"
 	SignUp = "signup"
 	Ping = "ping"
+	Mood = "moods"
 )
 
 func GetURLPath(routeName string) string {
