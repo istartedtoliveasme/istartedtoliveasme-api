@@ -3,7 +3,7 @@ package signup
 import (
 	"api/configs"
 	"api/constants"
-	userModel "api/database/models"
+	userModel "api/database/models/user-model"
 	"api/database/structures"
 	"api/helpers/httpHelper"
 	"api/helpers/responses"

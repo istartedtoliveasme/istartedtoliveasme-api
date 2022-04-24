@@ -11,3 +11,19 @@ func GetSingleNodeProps(record neo4j.Record) httpHelper.JSON {
 	}
 	return nil
 }
+
+func GetAllNodeProps(result neo4j.Result) ([]httpHelper.JSON, error) {
+	var payload []httpHelper.JSON
+
+	collections, err := result.Collect()
+
+	if err !=  nil {
+		return nil, err
+	}
+
+	for _, record := range collections {
+		payload = append(payload, GetSingleNodeProps(*record))
+	}
+
+	return payload, nil
+}
