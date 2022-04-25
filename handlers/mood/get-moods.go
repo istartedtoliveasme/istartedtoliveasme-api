@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetMoodHandler(context *gin.Context) {
+func GetAllHandler(context *gin.Context) {
 	var code int
 	var response httpHelper.JSON
 	_, session := configs.Neo4jDriver()

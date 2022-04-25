@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func Handler(context *gin.Context) {
+func CreateHandler(context *gin.Context) {
 	var body Body
 	var code int
 	var response httpHelper.JSON
@@ -23,13 +23,7 @@ func Handler(context *gin.Context) {
 		code, response = responses.BadRequest(constants.FailedCreateMood, []error{err})
 	}
 
-	record := moodModel.Mood{
-		Id: rand.Int(),
-		Icon: body.Icon,
-		Title: body.Title,
-		Description: body.Description,
-		CreatedAt: time.Now().UTC(),
-	}
+	record := createMoodRecord(body)
 	_, err = moodModel.CreateMood(session, record)
 
 	if err != nil {
@@ -45,4 +39,14 @@ type Body struct {
 	Icon        string `form:"icon" json:"icon" binding:"required"`
 	Title       string `form:"title" json:"title" binding:"required"`
 	Description string `form:"description" json:"description" binding:"required"`
+}
+
+func createMoodRecord(body Body) moodModel.Mood {
+	return moodModel.Mood{
+		Id:          rand.Int(),
+		Icon:        body.Icon,
+		Title:       body.Title,
+		Description: body.Description,
+		CreatedAt:   time.Now().UTC(),
+	}
 }
