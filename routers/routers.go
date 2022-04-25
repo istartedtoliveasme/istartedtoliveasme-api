@@ -15,7 +15,7 @@ func GetV1Routers(router *gin.Engine) {
 		v1.POST(GetURLPath(SignIn), signin.Handler)
 		v1.GET(GetURLPath(Ping), handlers.PingHandler)
 		v1.POST(GetURLPath(SignUp), signup.Handler)
-		v1.POST(GetURLPath(Mood), mood.Handler)
-		v1.GET(GetURLPath(Mood), mood.GetMoodHandler)
+		v1.POST(GetURLPath(Mood), mood.CreateHandler)
+		v1.GET(GetURLPath(Mood), mood.GetAllHandler)
 	}
 }
