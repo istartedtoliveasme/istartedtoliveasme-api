@@ -11,4 +11,6 @@ const (
 	GetRecordFailed      = "Failed to get the record"
 	FailedAuthentication = "Authentication failed"
 	FailedCreateMood     = "Failed to create mood-model"
+	RequiredMissingFields     = "Missing fields are required"
+	DuplicateRecord     = "Records is a duplicate"
 )

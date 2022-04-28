@@ -3,6 +3,7 @@ package moodModel
 import (
 	"api/helpers"
 	"api/helpers/httpHelper"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"time"
 )
@@ -12,7 +13,7 @@ type Mood struct {
 	Icon        string
 	Title       string
 	Description string
-	CreatedAt time.Time
+	CreatedAt   time.Time
 }
 
 type Controller struct {
@@ -30,7 +31,7 @@ func CreateMood(c Controller) (interface{}, error) {
 			"icon":        m.Icon,
 			"title":       m.Title,
 			"description": m.Description,
-			"createdAt": m.CreatedAt,
+			"createdAt":   m.CreatedAt,
 		})
 
 		if err != nil {
@@ -42,14 +43,16 @@ func CreateMood(c Controller) (interface{}, error) {
 }
 
 func GetMoods(session neo4j.Session) ([]httpHelper.JSON, error) {
-	cypher := "MATCH  (m:Mood) RETURN m"
+	cypher := "MATCH (m:Mood) RETURN *"
 	records, err := session.Run(cypher, nil)
+
+	fmt.Println(records)
 
 	if err != nil {
 		return nil, err
 	}
 
-	serialize, err := helpers.GetAllNodeProps(records)
+	serialize, err := helpers.GetAllRecords(records)
 
 	if err != nil {
 		return nil, err
