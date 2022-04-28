@@ -15,11 +15,16 @@ type Mood struct {
 	CreatedAt time.Time
 }
 
-func CreateMood(session neo4j.Session, m Mood) (interface{}, error) {
-	return session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+type Controller struct {
+	GetSession func() neo4j.Session
+	GetMood    func() Mood
+}
+
+func CreateMood(c Controller) (interface{}, error) {
+	return c.GetSession().WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
 
 		cypher := "CREATE (m:Mood {id: $id, icon: $icon, title: $title, description: $description, createdAt: $createdAt }) RETURN m"
-
+		m := c.GetMood()
 		result, err := tx.Run(cypher, httpHelper.JSON{
 			"id":          m.Id,
 			"icon":        m.Icon,

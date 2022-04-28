@@ -7,6 +7,7 @@ import (
 	"api/helpers"
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
+	"api/serializers"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -52,10 +53,17 @@ func signInUser(userRecord neo4j.Result) (httpHelper.JSON, error) {
 		return nil, err
 	}
 
+	serializer := serializers.UserSerializer{}
+	err = json.Unmarshal(accessToken, &serializer)
+
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO :: bind profile to a struct that hides field password
 	return httpHelper.JSON{
 		"accessToken": accessToken,
-		"profile":     data,
+		"profile":  serializer,
 	}, nil
 
 }
