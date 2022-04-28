@@ -5,19 +5,19 @@ import (
 	"errors"
 )
 
-type User struct {
-	Id        int
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string `json:"-"` // ignoring property
+type UserRecord struct {
+	Id int `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName string `json:"lastName"`
+	Email string `json:"email"`
+	Password string `jso:"_"` // Ignore password from JSON parse
 }
 
-func (u User) ComparePassword(pass string) bool {
+func (u UserRecord) ComparePassword(pass string) bool {
 	return pass == u.Password
 }
 
-func (u *User) SetFirstName(firstName string) error {
+func (u *UserRecord) SetFirstName(firstName string) error {
 	if len(firstName) <= 0 {
 		return errors.New(constants.RequiredFirstName)
 	}
@@ -26,7 +26,7 @@ func (u *User) SetFirstName(firstName string) error {
 	return nil
 }
 
-func (u *User) SetLastName(lastName string) error {
+func (u *UserRecord) SetLastName(lastName string) error {
 	if len(lastName) <= 0 {
 		return errors.New(constants.RequiredLastName)
 	}
@@ -35,7 +35,7 @@ func (u *User) SetLastName(lastName string) error {
 	return nil
 }
 
-func (u *User) SetEmail(email string) error {
+func (u *UserRecord) SetEmail(email string) error {
 	if len(email) <= 0 {
 		return errors.New(constants.RequiredEmail)
 	}
@@ -44,7 +44,7 @@ func (u *User) SetEmail(email string) error {
 	return nil
 }
 
-func (u User) SetPassword(password string) error {
+func (u UserRecord) SetPassword(password string) error {
 	if len(password) <= 0 {
 		return errors.New(constants.RequiredPassword)
 	}
