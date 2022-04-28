@@ -5,8 +5,11 @@ import (
 	"api/constants"
 	userModel "api/database/models/user-model"
 	"api/database/structures"
+	"api/helpers"
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
+	"api/serializers"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,13 +30,36 @@ func Handler(context *gin.Context) {
 			Email:     body.Email,
 		})
 
-		code, response = responses.OkRequest(constants.RegisteredSuccess, result)
+		record, err := result.Single()
 
 		if err != nil {
 			code, response = responses.BadRequest(constants.ExistUserName, []error{err})
 		}
 
-		session.Close()
+		serializer := serializers.UserSerializer{}
+
+		singleRecord := helpers.GetSingleNodeProps(*record)
+
+		byteRecord, err := json.Marshal(singleRecord)
+
+		if err != nil {
+			code, response = responses.BadRequest(constants.ExistUserName, []error{err})
+		}
+
+		err = json.Unmarshal(byteRecord, &serializer)
+
+		if err != nil {
+			code, response = responses.BadRequest(constants.ExistUserName, []error{err})
+		}
+
+		code, response = responses.OkRequest(constants.RegisteredSuccess, serializer)
+
+		err = session.Close()
+
+		if err != nil {
+			code, response = responses.BadRequest(constants.ExistUserName, []error{err})
+		}
+
 		context.JSON(code, response)
 
 	}

@@ -7,6 +7,7 @@ import (
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 	"time"
 )
@@ -24,7 +25,8 @@ func CreateHandler(context *gin.Context) {
 	}
 
 	record := createMoodRecord(body)
-	_, err = moodModel.CreateMood(session, record)
+
+	_, err = moodModel.CreateMood(CreateMoodPropertyController(session, record))
 
 	if err != nil {
 		code, response = responses.BadRequest(constants.FailedCreateMood, []error{err})
@@ -48,5 +50,17 @@ func createMoodRecord(body Body) moodModel.Mood {
 		Title:       body.Title,
 		Description: body.Description,
 		CreatedAt:   time.Now().UTC(),
+	}
+}
+
+
+func CreateMoodPropertyController (s neo4j.Session, m moodModel.Mood) moodModel.Controller {
+	return moodModel.Controller{
+		GetSession: func() neo4j.Session {
+			return s
+		},
+		GetMood: func() moodModel.Mood {
+			return m
+		},
 	}
 }
