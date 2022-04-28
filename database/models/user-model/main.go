@@ -2,52 +2,106 @@ package userModel
 
 import (
 	"api/constants"
+	"api/database/models/typings"
 	"api/database/structures"
+	"api/helpers"
 	"api/helpers/httpHelper"
+	"encoding/json"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 )
 
-type UserModel interface {
-	Cypher(transaction neo4j.Transaction) ModelCypherQuery
-}
-
 type ModelCypherQuery interface {
 	GetByEmail(tx neo4j.Transaction) func(email string) (neo4j.Result, error)
-	Create(tx neo4j.Transaction) func(user structures.User) (neo4j.Result, error)
+	Create(tx neo4j.Transaction) func(c CreateProps) (neo4j.Result, error)
 }
 
-func GetByEmail(tx neo4j.Session) func(email string) (neo4j.Result, error) {
-	return func(email string) (neo4j.Result, error) {
-		return tx.Run("MATCH (u:User { email: $email }) RETURN u LIMIT 1", httpHelper.JSON{"email": email})
-	}
+type GetByEmailProps struct {
+	typings.GetSession
+	GetEmail func() string
 }
 
-func Create(tx neo4j.Session) func(user structures.User) (neo4j.Result, error) {
-	return func(user structures.User) (neo4j.Result, error) {
-		getByEmailRecord, err := GetByEmail(tx)(user.Email)
+func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
+	var userRecord structures.UserRecord
+	cypher := "MATCH (u:User { email: $email }) RETURN u LIMIT 1"
+	params := httpHelper.JSON{"email": props.GetEmail()}
 
-		if err != nil {
-			return nil, err
-		}
-
-		if getByEmailRecord.Next() {
-			return nil, errors.New(constants.ExistUserName)
-		}
-
-		records, err := tx.Run("CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u", httpHelper.JSON{
-			"id":        rand.Int(),
-			"firstName": user.FirstName,
-			"lastName":  user.LastName,
-			"email":     user.Email,
-			"password":  user.Password,
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		return records, nil
+	result, err := props.GetSession().Run(cypher, params)
+	if err != nil {
+		return userRecord, err
 	}
+
+	record, err := helpers.GetSingleRecord(result)
+	if err != nil {
+		return userRecord, err
+	}
+
+	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
+		return userRecord, err
+	}
+
+	return userRecord, nil
+}
+
+type CreateProps struct {
+	typings.GetSession
+	GetUserData  func() (structures.UserRecord, error)
+	GetUserInput func() structures.UserRecord
+}
+
+func Create(props CreateProps) (structures.UserRecord, error) {
+	var userRecord structures.UserRecord
+	tx := props.GetSession()
+	cypherText := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
+
+	_, err := props.GetUserData()
+
+	// if error is nil means the record exist
+	if err == nil {
+		return userRecord, errors.New(constants.DuplicateRecord)
+	}
+
+	input := props.GetUserInput()
+	params := httpHelper.JSON{
+		"id":        rand.Int(),
+		"firstName": input.FirstName,
+		"lastName":  input.LastName,
+		"email":     input.Email,
+		"password":  input.Password,
+	}
+
+	records, err := tx.Run(cypherText, params)
+
+	if err != nil {
+		return userRecord, err
+	}
+
+	userRecord, err = getUserSingleRecord(records)
+	if err != nil {
+		return userRecord, err
+	}
+
+	return userRecord, nil
+
+}
+
+func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, error) {
+	var userRecord structures.UserRecord
+
+	singleRecord, err := helpers.GetSingleRecord(result)
+	if err != nil {
+		return userRecord, err
+	}
+
+	byteArray, err := json.Marshal(singleRecord)
+	if err != nil {
+		return userRecord, err
+	}
+
+	err = json.Unmarshal(byteArray, &userRecord)
+	if err != nil {
+		return userRecord, err
+	}
+	return userRecord, nil
 }
