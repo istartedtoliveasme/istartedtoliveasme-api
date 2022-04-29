@@ -58,4 +58,3 @@ func getByEmailFactory(s neo4j.Session, body Body) userModel.GetByEmailProps {
 		GetEmail:   getEmail,
 	}
 }
-

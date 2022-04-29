@@ -15,3 +15,8 @@ type GetByEmailProps struct {
 	typings.GetSession
 	GetEmail func() string
 }
+
+type GetByIdProps struct {
+	typings.GetSession
+	GetId func() string
+}

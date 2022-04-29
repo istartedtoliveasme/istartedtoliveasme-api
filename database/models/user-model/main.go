@@ -5,6 +5,7 @@ import (
 	"api/database/models/typings"
 	"api/database/structures"
 	"api/helpers"
+	"api/helpers/error-helper"
 	"api/helpers/httpHelper"
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -14,6 +15,39 @@ import (
 type ModelCypherQuery interface {
 	GetByEmail(tx neo4j.Transaction) func(email string) (neo4j.Result, error)
 	Create(tx neo4j.Transaction) func(c CreateProps) (neo4j.Result, error)
+}
+
+func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError) {
+	var userRecord structures.UserRecord
+	cypher := "MATCH (u:User { id: $id }) RETURN u LIMIT 1"
+	params := httpHelper.JSON{"id": props.GetId()}
+
+	result, err := props.GetSession().Run(cypher, params)
+
+	if err != nil {
+		return userRecord, typings.RecordError{
+			Message: constants.FailedCreateRecord,
+			Err: err,
+		}
+	}
+	
+	record, err := helpers.GetSingleRecord(result)
+
+	if err != nil {
+		return userRecord, typings.RecordError{
+			Message: constants.FailedFetchRecord,
+			Err: err,
+		}
+	}
+
+	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
+		return userRecord, typings.RecordError{
+			Message: constants.FailedEncodeRecord,
+			Err: err,
+		}
+	}
+	
+	return userRecord, nil
 }
 
 func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
@@ -38,7 +72,7 @@ func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
 	return userRecord, nil
 }
 
-func Create(props CreateProps) (structures.UserRecord, helpers.CustomError) {
+func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	tx := props.GetSession()
 	cypherText := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
@@ -75,7 +109,7 @@ func Create(props CreateProps) (structures.UserRecord, helpers.CustomError) {
 	if err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.FailedFetchRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -83,7 +117,7 @@ func Create(props CreateProps) (structures.UserRecord, helpers.CustomError) {
 
 }
 
-func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, helpers.CustomError) {
+func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 
 	singleRecord, err := helpers.GetSingleRecord(result)
@@ -105,7 +139,7 @@ func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, helpers.Cu
 	if err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.FailedDecodeRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 	return userRecord, nil

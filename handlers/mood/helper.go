@@ -2,18 +2,13 @@ package mood
 
 import (
 	moodModel "api/database/models/mood-model"
+	"api/handlers/mood/typings"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 	"time"
 )
 
-type Body struct {
-	Icon        string `form:"icon" json:"icon" binding:"required"`
-	Title       string `form:"title" json:"title" binding:"required"`
-	Description string `form:"description" json:"description" binding:"required"`
-}
-
-func createMoodRecord(body Body) moodModel.Mood {
+func createMoodRecord(body typings.Body) moodModel.Mood {
 	return moodModel.Mood{
 		Id:          rand.Int(),
 		Icon:        body.Icon,
@@ -23,8 +18,8 @@ func createMoodRecord(body Body) moodModel.Mood {
 	}
 }
 
-func CreateMoodPropertyFactory(s neo4j.Session, m moodModel.Mood) moodModel.Controller {
-	return moodModel.Controller{
+func CreateMoodPropertyFactory(s neo4j.Session, m moodModel.Mood) moodModel.Props {
+	return moodModel.Props{
 		GetSession: func() neo4j.Session {
 			return s
 		},
