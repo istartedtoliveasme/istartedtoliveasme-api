@@ -5,23 +5,11 @@ import (
 	"api/routers"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"log"
 )
-
-func loadEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-}
 
 func main() {
 	router := gin.Default()
 	port := "1337"
-
-	// Load environment variables
-	loadEnv()
 
 	err := configs.GetRouterConfig(router)
 
@@ -31,7 +19,7 @@ func main() {
 
 	routers.GetV1Routers(router)
 
-	driver, _ := configs.Neo4jDriver()
+	driver, _ := configs.StartNeo4jDriver()
 
 	err = driver.VerifyConnectivity()
 
