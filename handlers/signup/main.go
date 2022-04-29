@@ -10,7 +10,8 @@ import (
 
 func Handler(c *gin.Context) {
 	var body Body
-	_, session := configs.Neo4jDriver()
+
+	_, session := configs.StartNeo4jDriver()
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, []error{err}))

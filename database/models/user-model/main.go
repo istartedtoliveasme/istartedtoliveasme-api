@@ -7,7 +7,6 @@ import (
 	"api/helpers"
 	"api/helpers/httpHelper"
 	"encoding/json"
-	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 )
@@ -15,11 +14,6 @@ import (
 type ModelCypherQuery interface {
 	GetByEmail(tx neo4j.Transaction) func(email string) (neo4j.Result, error)
 	Create(tx neo4j.Transaction) func(c CreateProps) (neo4j.Result, error)
-}
-
-type GetByEmailProps struct {
-	typings.GetSession
-	GetEmail func() string
 }
 
 func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
@@ -44,13 +38,7 @@ func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
 	return userRecord, nil
 }
 
-type CreateProps struct {
-	typings.GetSession
-	GetUserData  func() (structures.UserRecord, error)
-	GetUserInput func() structures.UserRecord
-}
-
-func Create(props CreateProps) (structures.UserRecord, error) {
+func Create(props CreateProps) (structures.UserRecord, helpers.CustomError) {
 	var userRecord structures.UserRecord
 	tx := props.GetSession()
 	cypherText := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
@@ -59,7 +47,10 @@ func Create(props CreateProps) (structures.UserRecord, error) {
 
 	// if error is nil means the record exist
 	if err == nil {
-		return userRecord, errors.New(constants.DuplicateRecord)
+		return userRecord, typings.RecordError{
+			Message: constants.DuplicateRecord,
+			Err:     err,
+		}
 	}
 
 	input := props.GetUserInput()
@@ -74,34 +65,48 @@ func Create(props CreateProps) (structures.UserRecord, error) {
 	records, err := tx.Run(cypherText, params)
 
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.FailedCreateRecord,
+			Err:     err,
+		}
 	}
 
 	userRecord, err = getUserSingleRecord(records)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.FailedFetchRecord,
+			Err: err,
+		}
 	}
 
 	return userRecord, nil
 
 }
 
-func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, error) {
+func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, helpers.CustomError) {
 	var userRecord structures.UserRecord
 
 	singleRecord, err := helpers.GetSingleRecord(result)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.GetRecordFailed,
+		}
 	}
 
 	byteArray, err := json.Marshal(singleRecord)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.FailedEncodeRecord,
+			Err:     err,
+		}
 	}
 
 	err = json.Unmarshal(byteArray, &userRecord)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.FailedDecodeRecord,
+			Err: err,
+		}
 	}
 	return userRecord, nil
 }

@@ -5,17 +5,15 @@ import (
 	"api/constants"
 	moodModel "api/database/models/mood-model"
 	"api/helpers/responses"
-	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 func GetAllHandler(c *gin.Context) {
-	_, session := configs.Neo4jDriver()
+	_, session := configs.StartNeo4jDriver()
 
 	records, err := moodModel.GetMoods(session)
 
 	if err != nil {
-		fmt.Println("no error")
 		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
 	}
 

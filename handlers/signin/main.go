@@ -13,7 +13,7 @@ func Handler(c *gin.Context) {
 	var body Body
 	var code int
 	var response httpHelper.JSON
-	_, session := configs.Neo4jDriver()
+	_, session := configs.StartNeo4jDriver()
 
 	err := c.ShouldBind(&body)
 	if err != nil {
