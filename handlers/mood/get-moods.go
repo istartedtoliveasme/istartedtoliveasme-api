@@ -10,6 +10,7 @@ import (
 
 func GetAllHandler(c *gin.Context) {
 	_, session := configs.StartNeo4jDriver()
+	defer session.Close()
 
 	records, err := moodModel.GetMoods(session)
 
