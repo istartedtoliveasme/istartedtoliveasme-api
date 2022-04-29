@@ -10,7 +10,7 @@ import (
 
 func CreateHandler(c *gin.Context) {
 	var body Body
-	_, session := configs.Neo4jDriver()
+	_, session := configs.StartNeo4jDriver()
 
 	err := c.ShouldBind(&body)
 

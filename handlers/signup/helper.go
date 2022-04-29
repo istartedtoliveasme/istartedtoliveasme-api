@@ -1,8 +1,11 @@
 package signup
 
 import (
+	"api/constants"
+	"api/database/models/typings"
 	userModel "api/database/models/user-model"
 	"api/database/structures"
+	"api/helpers"
 	"api/serializers"
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -16,19 +19,25 @@ type Body struct {
 	Password  string `form:"password" json:"password" binding:"required"`
 }
 
-func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSerializer, error) {
+func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSerializer, helpers.CustomError) {
 	serializer := serializers.UserSerializer{}
 
 	byteRecord, err := json.Marshal(userRecord)
 
 	if err != nil {
-		return serializer, err
+		return serializer, typings.RecordError{
+			Message: constants.FailedSerializeRecord,
+			Err: err,
+		}
 	}
 
 	err = json.Unmarshal(byteRecord, &serializer)
 
 	if err != nil {
-		return serializer, err
+		return serializer, typings.RecordError{
+			Message: constants.FailedDecodeRecord,
+			Err: err,
+		}
 	}
 
 	return serializer, nil
