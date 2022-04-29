@@ -11,6 +11,7 @@ import (
 func CreateHandler(c *gin.Context) {
 	var body Body
 	_, session := configs.StartNeo4jDriver()
+	defer session.Close()
 
 	err := c.ShouldBind(&body)
 
