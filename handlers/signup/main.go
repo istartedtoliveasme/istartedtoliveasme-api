@@ -12,6 +12,7 @@ func Handler(c *gin.Context) {
 	var body Body
 
 	_, session := configs.StartNeo4jDriver()
+	defer session.Close()
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, []error{err}))
