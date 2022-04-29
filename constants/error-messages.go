@@ -18,4 +18,5 @@ const (
 	FailedEncodeRecord = "Failed to encode record"
 	FailedDecodeRecord = "Failed to decode record"
 	FailedSerializeRecord = "Failed to serialize record"
+	FailedAuthorize = "Authorization failed"
 )
