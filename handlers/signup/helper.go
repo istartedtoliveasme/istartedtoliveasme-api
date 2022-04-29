@@ -5,7 +5,7 @@ import (
 	"api/database/models/typings"
 	userModel "api/database/models/user-model"
 	"api/database/structures"
-	"api/helpers"
+	"api/helpers/error-helper"
 	"api/serializers"
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -19,7 +19,7 @@ type Body struct {
 	Password  string `form:"password" json:"password" binding:"required"`
 }
 
-func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSerializer, helpers.CustomError) {
+func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSerializer, errorHelper.CustomError) {
 	serializer := serializers.UserSerializer{}
 
 	byteRecord, err := json.Marshal(userRecord)
@@ -27,7 +27,7 @@ func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSeri
 	if err != nil {
 		return serializer, typings.RecordError{
 			Message: constants.FailedSerializeRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -36,7 +36,7 @@ func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSeri
 	if err != nil {
 		return serializer, typings.RecordError{
 			Message: constants.FailedDecodeRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -82,4 +82,3 @@ func createUserFactory(s neo4j.Session, body Body) userModel.CreateProps {
 		GetUserInput: getUserInput,
 	}
 }
-

@@ -3,6 +3,7 @@ package helpers
 import (
 	"api/constants"
 	"api/database/models/typings"
+	"api/helpers/error-helper"
 	"api/helpers/httpHelper"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -30,7 +31,7 @@ func GetSingleRecord(result neo4j.Result) (httpHelper.JSON, error) {
 	return data, nil
 }
 
-func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, CustomError) {
+func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomError) {
 	var payload []httpHelper.JSON
 
 	collections, err := result.Collect()
@@ -38,7 +39,7 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, CustomError) {
 	if err != nil {
 		return nil, typings.RecordError{
 			Message: constants.FailedFetchRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 
@@ -48,7 +49,7 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, CustomError) {
 		if parseErr := httpHelper.JSONParse(data, &parsePayload); err != nil || parseErr != nil {
 			return payload, typings.RecordError{
 				Message: constants.FailedFetchRecord,
-				Err: err,
+				Err:     err,
 			}
 		}
 
@@ -58,7 +59,7 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, CustomError) {
 	return payload, nil
 }
 
-func getSinglePropsByRecord(record neo4j.Record) (interface{}, CustomError) {
+func getSinglePropsByRecord(record neo4j.Record) (interface{}, errorHelper.CustomError) {
 
 	if len(record.Values) > 0 {
 		return record.Values[0].(neo4j.Node).Props, nil
@@ -66,6 +67,6 @@ func getSinglePropsByRecord(record neo4j.Record) (interface{}, CustomError) {
 
 	return nil, typings.RecordError{
 		Message: constants.GetRecordFailed,
-		Err: errors.New(constants.GetRecordFailed),
+		Err:     errors.New(constants.GetRecordFailed),
 	}
 }

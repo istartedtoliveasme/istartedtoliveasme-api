@@ -1,4 +1,4 @@
-package helpers
+package errorHelper
 
 type CustomError interface {
 	Error() string
