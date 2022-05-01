@@ -19,4 +19,5 @@ const (
 	FailedDecodeRecord = "Failed to decode record"
 	FailedSerializeRecord = "Failed to serialize record"
 	FailedAuthorize = "Authorization failed"
+	FailedParseClaim = "Failed to parse JWT Claims"
 )
