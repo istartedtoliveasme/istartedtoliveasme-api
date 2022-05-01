@@ -35,10 +35,6 @@ func CreateHandler(c *gin.Context) {
 
 	fmt.Println(decodedUserSerializer)
 
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
-	}
-
 	record := createMoodRecord(body)
 
 	_, err = moodModel.CreateMood(CreateMoodPropertyFactory(session, record))
