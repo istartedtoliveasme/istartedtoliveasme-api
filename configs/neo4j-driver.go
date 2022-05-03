@@ -46,9 +46,9 @@ func Neo4jDriver(props Neo4jDriverProps) (neo4j.Driver, neo4j.Session) {
 func StartNeo4jDriver() (neo4j.Driver, neo4j.Session) {
 	getEnv := LoadEnvironmentVariables()
 	credentials := Neo4jDriverCredentials{
-		Uri:      getEnv(neo4jConstant.URI),
-		Username: getEnv(neo4jConstant.USERNAME),
-		Password: getEnv(neo4jConstant.PASSWORD),
+		Uri:      getEnv(neo4jConstant.Neo4jUri),
+		Username: getEnv(neo4jConstant.Neo4jUsername),
+		Password: getEnv(neo4jConstant.Neo4jPassword),
 	}
 
 	return Neo4jDriver(credentials)

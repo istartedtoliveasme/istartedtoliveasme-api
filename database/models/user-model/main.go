@@ -27,26 +27,26 @@ func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError
 	if err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.FailedCreateRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
-	
+
 	record, err := helpers.GetSingleRecord(result)
 
 	if err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.FailedFetchRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
 
 	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.FailedEncodeRecord,
-			Err: err,
+			Err:     err,
 		}
 	}
-	
+
 	return userRecord, nil
 }
 
@@ -75,7 +75,7 @@ func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
 func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	tx := props.GetSession()
-	cypherText := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
+	cypher := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
 
 	_, err := props.GetUserData()
 
@@ -96,7 +96,7 @@ func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) 
 		"password":  input.Password,
 	}
 
-	records, err := tx.Run(cypherText, params)
+	records, err := tx.Run(cypher, params)
 
 	if err != nil {
 		return userRecord, typings.RecordError{

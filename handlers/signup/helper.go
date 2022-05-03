@@ -6,8 +6,8 @@ import (
 	userModel "api/database/models/user-model"
 	"api/database/structures"
 	"api/helpers/error-helper"
-	"api/serializers"
-	"encoding/json"
+	"api/helpers/httpHelper"
+	"api/helpers/serializers"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
 )
@@ -22,24 +22,13 @@ type Body struct {
 func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSerializer, errorHelper.CustomError) {
 	serializer := serializers.UserSerializer{}
 
-	byteRecord, err := json.Marshal(userRecord)
-
+	err := httpHelper.JSONParse(userRecord, &serializer)
 	if err != nil {
 		return serializer, typings.RecordError{
 			Message: constants.FailedSerializeRecord,
 			Err:     err,
 		}
 	}
-
-	err = json.Unmarshal(byteRecord, &serializer)
-
-	if err != nil {
-		return serializer, typings.RecordError{
-			Message: constants.FailedDecodeRecord,
-			Err:     err,
-		}
-	}
-
 	return serializer, nil
 
 }

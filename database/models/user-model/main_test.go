@@ -14,9 +14,9 @@ func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 	// TODO :: mocking environment variables
 	getEnv := configs.LoadEnvironmentVariables()
 	neo4jProps := configs.Neo4jDriverProps{
-		Uri:      getEnv(neo4jConstant.URI),
-		Username: getEnv(neo4jConstant.USERNAME),
-		Password: getEnv(neo4jConstant.PASSWORD),
+		Uri:      getEnv(neo4jConstant.Neo4jUri),
+		Username: getEnv(neo4jConstant.Neo4jUsername),
+		Password: getEnv(neo4jConstant.Neo4jPassword),
 	}
 	// TODO :: mocking driver
 	// GIVEN the session drive started
@@ -45,9 +45,9 @@ func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 func TestUserModelShouldNotThrowError(t *testing.T) {
 	configs.LoadEnvironmentVariables()
 	neo4jProps := configs.Neo4jDriverProps{
-		Uri:      neo4jConstant.URI,
-		Username: neo4jConstant.USERNAME,
-		Password: neo4jConstant.PASSWORD,
+		Uri:      neo4jConstant.Neo4jUri,
+		Username: neo4jConstant.Neo4jUsername,
+		Password: neo4jConstant.Neo4jPassword,
 	}
 	// GIVEN the session drive started
 	_, session := configs.Neo4jDriver(neo4jProps)
@@ -75,9 +75,9 @@ func TestUserModelShouldNotThrowError(t *testing.T) {
 func TestUserModelShouldSeeResultValue(t *testing.T) {
 	configs.LoadEnvironmentVariables()
 	neo4jProps := configs.Neo4jDriverProps{
-		Uri:      neo4jConstant.URI,
-		Username: neo4jConstant.USERNAME,
-		Password: neo4jConstant.PASSWORD,
+		Uri:      neo4jConstant.Neo4jUri,
+		Username: neo4jConstant.Neo4jUsername,
+		Password: neo4jConstant.Neo4jPassword,
 	}
 	// GIVEN the session drive started
 	_, session := configs.Neo4jDriver(neo4jProps)

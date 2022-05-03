@@ -5,17 +5,20 @@ import (
 	errorHelper "api/helpers/error-helper"
 	"fmt"
 	"github.com/golang-jwt/jwt"
-	"os"
 )
 
 type JWTSign interface {
 	SignClaim() (string, error)
 }
 
+type IJWTError interface {
+	errorHelper.CustomError
+}
+
 type JWTError struct {
 	Message string
-	Err error
-};
+	Err     error
+}
 
 func (JWTErr JWTError) Error() string {
 	return JWTErr.Message
@@ -29,17 +32,22 @@ type JWTClaim jwt.MapClaims
 
 // SignClaim use os.Getenv("JWT_SECRET") to get the secret key
 func (claims JWTClaim) SignClaim(secret []byte) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(claims))
-
-	return token.SignedString(secret)
+	// TODO :: use SigningString method that has a parameter of key
+	return jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(claims)).SigningString()
 }
 
 type JWTToken string
 
-func (jwtToken string) ParseClaim() (*jwt.Token, error) {
-	token, err := jwt.Parse(jwtToken, func(token jwt.Token) (interface{}, error) {
+func (jwtToken JWTToken) ParseClaim() (*jwt.Token, error) {
+	return jwt.Parse(string(jwtToken), func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf(constants.FailedParseClaim+": %v", token.Header[HeaderAlg])
+		}
 
+		return jwtToken, nil
 	})
-
-	return token, err
 }
+
+const (
+	HeaderAlg = "alg"
+)
