@@ -1,7 +1,7 @@
 package neo4jConstant
 
 const (
-	URI = "NEO4J_URI"
-	USERNAME = "NEO4J_USERNAME"
-	PASSWORD = "NEO4J_PASSWORD"
+	Neo4jUri      = "NEO4J_URI"
+	Neo4jUsername = "NEO4J_USERNAME"
+	Neo4jPassword = "NEO4J_PASSWORD"
 )

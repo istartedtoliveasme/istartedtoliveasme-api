@@ -1,9 +1,9 @@
 package http_tests
 
 import (
+	routers2 "api/configs/routers"
 	"api/constants"
 	"api/helpers/httpHelper"
-	"api/routers"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -16,9 +16,9 @@ import (
 )
 
 func TestSignInShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
-	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignIn)
+	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, url, nil)
@@ -30,9 +30,9 @@ func TestSignInShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
 
 func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 	// GIVEN the initial dependency is declared
-	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignIn)
+	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 	w := httptest.NewRecorder()
 	// AND I have the username
 	fakeUsername := "istartedtoliveasme"
@@ -66,9 +66,9 @@ func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 }
 
 func TestSignInShouldAuthorized(t *testing.T) {
-	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignIn)
+	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
 

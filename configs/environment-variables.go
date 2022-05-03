@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type GetEnv func(key string ) string
+type GetEnv func(key string) string
 
 func LoadEnvironmentVariables() GetEnv {
 	err := godotenv.Load()

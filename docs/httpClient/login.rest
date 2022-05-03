@@ -1,0 +1,19 @@
+### Signin
+POST {{baseUrl}}/signin
+Content-type: application/json
+
+{
+  "email": "istartedtoliveasme@gmail.com",
+  "password": "test1234"
+}
+
+> {%
+client.test("Should be able to return a status code of 200", function () {
+    client.assert(response.status === 200)
+})
+
+client.test("Should be able to return the main REST payload", function () {
+    client.assert(response.body.hasOwnProperty("data"), "Should have a property name of data")
+    client.assert(response.body.hasOwnProperty("message"), "Should have a property name of message")
+})
+ %}
