@@ -1,0 +1,5 @@
+package zeroValues
+
+const (
+	ZeroString = ""
+)

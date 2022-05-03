@@ -4,7 +4,7 @@ import (
 	"api/constants"
 	"api/database/models/typings"
 	"api/helpers/error-helper"
-	"api/serializers"
+	"api/helpers/serializers"
 	"fmt"
 	"strings"
 )

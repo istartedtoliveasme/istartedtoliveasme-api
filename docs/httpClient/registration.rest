@@ -1,0 +1,25 @@
+### Registration
+POST {{baseUrl}}/signup
+Content-Type: application/json
+
+{
+  "firstName": "{{$randomInt}}",
+  "lastName": "{{$randomInt}}",
+  "email": "{{$randomInt}}@gmail.com",
+  "password": "{{$randomInt}}"
+}
+
+> {%
+ client.test("Should be able to return ok status", function () {
+     client.assert(response.status === 200, "Status code should be 200")
+ })
+
+ client.test("Should be able to return the required properties", function () {
+     client.assert(response.body.hasOwnProperty("data"), "Should return a property data")
+     client.assert(response.body.data.hasOwnProperty("id"), "Should have a child property of id")
+     client.assert(response.body.data.hasOwnProperty("firstName"), "Should have a child property of first name")
+     client.assert(response.body.data.hasOwnProperty("lastName"), "Should have a child property of last name")
+     client.assert(response.body.data.hasOwnProperty("email"), "Should have a child property of email")
+     client.assert(response.body.hasOwnProperty("message"), "Should return a property message")
+ })
+ %}

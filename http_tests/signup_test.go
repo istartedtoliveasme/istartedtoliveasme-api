@@ -1,8 +1,8 @@
 package http_tests
 
 import (
+	routers2 "api/configs/routers"
 	"api/helpers/httpHelper"
-	"api/routers"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -15,9 +15,9 @@ import (
 )
 
 func TestSignUpShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
-	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignUp)
+	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignUp)
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, url, nil)
@@ -28,9 +28,9 @@ func TestSignUpShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
 }
 
 func TestSignUpShouldAuthorized(t *testing.T) {
-	url := routers.GetURLPath(routers.Version1) + routers.GetURLPath(routers.SignUp)
+	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignUp)
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
 

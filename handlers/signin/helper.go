@@ -2,41 +2,79 @@ package signin
 
 import (
 	"api/constants"
+	"api/constants/jwt"
+	zeroValues "api/constants/zero-values"
+	"api/database/models/typings"
 	userModel "api/database/models/user-model"
 	"api/database/structures"
+	errorHelper "api/helpers/error-helper"
 	"api/helpers/httpHelper"
-	"api/serializers"
-	"encoding/json"
+	jwtHelper "api/helpers/jwt-helper"
+	"api/helpers/serializers"
 	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"os"
 )
 
-func signInUser(userRecord structures.UserRecord) (httpHelper.JSON, error) {
-	serializer := serializers.UserSerializer{}
+func signInUser(userRecord structures.UserRecord) (httpHelper.JSON, errorHelper.CustomError) {
+	var claims httpHelper.JSON
 	var emptyUserRecord structures.UserRecord
+	var err errorHelper.CustomError
+	var serializedRecord serializers.UserSerializer
 
 	if userRecord == emptyUserRecord {
-		return nil, errors.New(constants.GetRecordFailed)
+		return nil, typings.RecordError{
+			Message: constants.GetRecordFailed,
+			Err:     errors.New(constants.GetRecordFailed),
+		}
 	}
 
-	accessToken, err := generateAccessToken(userRecord)
+	err = httpHelper.JSONParse(userRecord, &claims)
+	if err != nil {
+		return nil, typings.RecordError{
+			Message: constants.FailedSerializeRecord,
+			Err:     err,
+		}
+	}
+
+	accessToken, err := generateAccessToken(jwtHelper.JWTClaim(claims))
 	if err != nil {
 		return nil, err
 	}
 
-	if err = json.Unmarshal(accessToken, &serializer); err != nil {
-		return nil, err
+	err = httpHelper.JSONParse(userRecord, &serializedRecord)
+	if err != nil {
+		return nil, typings.RecordError{
+			Message: constants.FailedSerializeRecord,
+			Err:     err,
+		}
 	}
 
 	return httpHelper.JSON{
 		"accessToken": accessToken,
-		"profile":     serializer,
+		"profile":     serializedRecord,
 	}, nil
 
 }
 
-func generateAccessToken(response interface{}) ([]byte, error) {
-	return json.Marshal(response)
+func generateAccessToken(claim jwtHelper.JWTClaim) (string, errorHelper.CustomError) {
+	var secret = []byte(os.Getenv(jwt.JwtSecret))
+
+	if claim == nil {
+		return zeroValues.ZeroString, jwtHelper.JWTError{
+			Message: constants.EmptyJWTClaim,
+			Err:     nil,
+		}
+	}
+
+	signClaim, err := claim.SignClaim(secret)
+	if err != nil {
+		return zeroValues.ZeroString, jwtHelper.JWTError{
+			Message: constants.FailedSignClaim,
+			Err:     err,
+		}
+	}
+	return signClaim, nil
 }
 
 type Body struct {

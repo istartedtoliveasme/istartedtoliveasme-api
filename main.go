@@ -2,7 +2,7 @@ package main
 
 import (
 	"api/configs"
-	"api/routers"
+	"api/configs/routers"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )

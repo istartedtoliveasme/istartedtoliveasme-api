@@ -1,7 +1,7 @@
 package http_tests
 
 import (
-	"api/routers"
+	routers2 "api/configs/routers"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -11,10 +11,10 @@ import (
 
 func TestPingRoute(t *testing.T) {
 	router := gin.Default()
-	routers.GetV1Routers(router)
+	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, routers.GetURLPath(routers.Version1)+routers.GetURLPath(routers.Ping), nil)
+	req, _ := http.NewRequest(http.MethodGet, routers2.GetURLPath(routers2.Version1)+routers2.GetURLPath(routers2.Ping), nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
