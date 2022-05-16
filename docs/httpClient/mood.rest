@@ -1,0 +1,21 @@
+### Create Mood
+POST {{baseUrl}}/moods
+Content-Type: application/json
+
+{
+  "icon": "{{$randomInt}}/icon",
+  "title": "{{$randomInt}} title",
+  "description": "{{$randomInt}} description"
+}
+
+### Get All Moods
+GET {{baseUrl}}/moods
+Content-Type: application/json
+
+> {%
+ client.test("Should be able to return the expected data from moods", function () {
+     client.assert(response.body.hasOwnProperty("data"), "Data should be defined")
+     client.assert(response.body.data.length > 0, "Data list should be greater than 0")
+     client.assert(response.body.hasOwnProperty("message"), "Message should be defined")
+ })
+ %}
