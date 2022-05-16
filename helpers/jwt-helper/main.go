@@ -31,9 +31,18 @@ func (JWTErr JWTError) Unwrap() error {
 type JWTClaim jwt.MapClaims
 
 // SignClaim use os.Getenv("JWT_SECRET") to get the secret key
-func (claims JWTClaim) SignClaim(secret []byte) (string, error) {
+func (claims JWTClaim) SignClaim(secret []byte) (string, errorHelper.CustomError) {
 	// TODO :: use SigningString method that has a parameter of key
-	return jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(claims)).SigningString()
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(claims)).SigningString()
+
+	if err != nil {
+		return accessToken, JWTError{
+			Message: constants.FailedSerializeRecord,
+			Err:     err,
+		}
+	}
+
+	return accessToken, nil
 }
 
 type JWTToken string
