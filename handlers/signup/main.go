@@ -37,7 +37,10 @@ func Handler(c *gin.Context) {
 
 	claim := jwtHelper.JWTClaim(jwtClaims)
 
-	claim.SignClaim([]byte(os.Getenv(jwt.JwtSecret)))
+	accessToken, err := claim.SignClaim([]byte(os.Getenv(jwt.JwtSecret)))
+	if err != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedParseClaim, []error{err}))
+	}
 
 	if !c.IsAborted() && err != nil {
 
@@ -45,6 +48,9 @@ func Handler(c *gin.Context) {
 	}
 
 	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.RegisteredSuccess, serializedRecord))
+		c.JSON(responses.OkRequest(constants.RegisteredSuccess, httpHelper.JSON{
+			"accessToken": accessToken,
+			"profile":     serializedRecord,
+		}))
 	}
 }

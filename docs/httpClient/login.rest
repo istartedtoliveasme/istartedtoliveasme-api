@@ -16,4 +16,6 @@ client.test("Should be able to return the main REST payload", function () {
     client.assert(response.body.hasOwnProperty("data"), "Should have a property name of data")
     client.assert(response.body.hasOwnProperty("message"), "Should have a property name of message")
 })
+
+client.global.set("accessToken", response.body.accessToken)
  %}

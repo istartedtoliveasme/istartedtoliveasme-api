@@ -11,7 +11,6 @@ import (
 
 func Handler(c *gin.Context) {
 	var body Body
-	var code int
 	var response httpHelper.JSON
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
@@ -33,7 +32,11 @@ func Handler(c *gin.Context) {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
 	}
 
-	if c.IsAborted() == false {
-		c.JSON(code, response)
+	if !c.IsAborted() && err != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistUserName, []error{err}))
+	}
+
+	if !c.IsAborted() {
+		c.JSON(responses.OkRequest(constants.RegisteredSuccess, response))
 	}
 }

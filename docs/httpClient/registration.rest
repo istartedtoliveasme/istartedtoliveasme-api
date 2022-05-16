@@ -3,8 +3,8 @@ POST {{baseUrl}}/signup
 Content-Type: application/json
 
 {
-  "firstName": "{{$randomInt}}",
-  "lastName": "{{$randomInt}}",
+  "firstName": "first name {{$randomInt}}",
+  "lastName": "last name {{$randomInt}}",
   "email": "{{$randomInt}}@gmail.com",
   "password": "{{$randomInt}}"
 }
@@ -22,4 +22,7 @@ Content-Type: application/json
      client.assert(response.body.data.hasOwnProperty("email"), "Should have a child property of email")
      client.assert(response.body.hasOwnProperty("message"), "Should return a property message")
  })
+
+ client.global.set("accessToken", response.body.data.token)
+
  %}
