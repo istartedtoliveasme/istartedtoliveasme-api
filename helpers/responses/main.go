@@ -1,26 +1,44 @@
 package responses
 
 import (
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"net/http"
 )
 
-func BadRequest(message string, errs []error) (int, httpHelper.JSON) {
-	var errorMessages []string
+type BindError struct {
+	Message string
+	Err     error
+}
 
-	for _, eachError := range errs {
-		errorMessages = append(errorMessages, eachError.Error())
+func (r BindError) Error() string {
+	return r.Message
+}
+
+func (r BindError) Unwrap() error {
+	return r.Err
+}
+
+type HttpResponse[T any] struct {
+	Message string
+	Err     helperTypes.CustomError
+	Payload T
+}
+
+func (r HttpResponse[T]) BadRequest() (int, helperTypes.JsonPayload) {
+	switch len(r.Message) {
+	case 0:
+		r.Message = r.Err.Unwrap().Error()
 	}
 
-	return http.StatusBadRequest, httpHelper.JSON{
-		"errors":  errorMessages,
-		"message": message,
+	return http.StatusBadRequest, helperTypes.JsonPayload{
+		"error":   r.Err.Unwrap().Error(),
+		"message": r.Message,
 	}
 }
 
-func OkRequest(message string, payload interface{}) (int, httpHelper.JSON) {
-	return http.StatusOK, httpHelper.JSON{
-		"message": message,
-		"data":    payload,
+func (r HttpResponse[T]) OkRequest() (int, helperTypes.JsonPayload) {
+	return http.StatusOK, helperTypes.JsonPayload{
+		"message": r.Message,
+		"data":    r.Payload,
 	}
 }

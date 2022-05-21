@@ -3,14 +3,16 @@ package helpers
 import (
 	"api/constants"
 	"api/database/models/typings"
-	"api/helpers/error-helper"
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"errors"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
-func GetSingleRecord(result neo4j.Result) (httpHelper.JSON, error) {
-	var data httpHelper.JSON
+type GetSingleRecordResponse map[string]interface{}
+
+func GetSingleRecord(result neo4j.Result) (GetSingleRecordResponse, error) {
+	var jsonResponse helperTypes.Json[GetSingleRecordResponse]
 
 	record, err := result.Single()
 
@@ -24,15 +26,15 @@ func GetSingleRecord(result neo4j.Result) (httpHelper.JSON, error) {
 		return nil, err
 	}
 
-	if err = httpHelper.JSONParse(singleProps, &data); err != nil {
+	if err = jsonResponse.ParsePayload(singleProps); err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	return jsonResponse.Payload, nil
 }
 
-func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomError) {
-	var payload []httpHelper.JSON
+func GetAllRecords(result neo4j.Result) ([]GetSingleRecordResponse, helperTypes.CustomError) {
+	var allRecords helperTypes.Json[[]GetSingleRecordResponse]
 
 	collections, err := result.Collect()
 
@@ -44,25 +46,31 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomEr
 	}
 
 	for _, record := range collections {
-		var parsePayload httpHelper.JSON
+		var singleRecord helperTypes.Json[GetSingleRecordResponse]
 		data, err := GetSinglePropsByRecord(*record)
-		if parseErr := httpHelper.JSONParse(data, &parsePayload); err != nil || parseErr != nil {
-			return payload, typings.RecordError{
+		if parseErr := singleRecord.ParsePayload(data); err != nil || parseErr != nil {
+			return allRecords.Payload, typings.RecordError{
 				Message: constants.FailedFetchRecord,
 				Err:     err,
 			}
 		}
 
-		payload = append(payload, parsePayload)
+		allRecords.Payload = append(allRecords.Payload, singleRecord.Payload)
 	}
 
-	return payload, nil
+	return allRecords.Payload, nil
 }
 
-func GetSinglePropsByRecord(record neo4j.Record) (interface{}, errorHelper.CustomError) {
-
+func GetSinglePropsByRecord(record neo4j.Record) (interface{}, helperTypes.CustomError) {
 	if len(record.Values) > 0 {
-		return record.Values[0].(neo4j.Node).Props, nil
+		for _, recordValue := range record.Values {
+			fmt.Println("%T", recordValue)
+			switch recordValue.(type) {
+			case neo4j.Node:
+				return recordValue.(neo4j.Node).Props, nil
+			}
+		}
+
 	}
 
 	return nil, typings.RecordError{

@@ -2,15 +2,14 @@ package moodModel
 
 import (
 	"api/constants"
-	errorHelper "api/helpers/error-helper"
-	"api/helpers/httpHelper"
 	"api/helpers/serializers"
+	helperTypes "api/helpers/typings"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
 type MoodWithUserRecord struct {
 	Mood
-	User serializers.UserSerializer `json:"user"`
+	User serializers.UserResponse `json:"user"`
 }
 
 type ParseMoodsError struct {
@@ -26,49 +25,18 @@ func (p ParseMoodsError) Unwrap() error {
 	return p.Err
 }
 
-func ParseMoods(collections []*neo4j.Record) ([]MoodWithUserRecord, errorHelper.CustomError) {
-	var items []MoodWithUserRecord
-
-	for _, record := range collections {
-		item, err := SerializeMoodAndUserRecordValues(record)
-		if err != nil {
-			return items, err
-		}
-		items = append(items, item)
-	}
-
-	return items, nil
-}
-
-func SerializeMoodAndUserRecordValues(record *neo4j.Record) (MoodWithUserRecord, errorHelper.CustomError) {
-	var moodWithUserRecord MoodWithUserRecord
-	for _, recordValue := range record.Values {
-
-		switch recordValue.(type) {
-		case neo4j.Node:
-			err := moodWithUserRecord.getMapLabelProps(recordValue.(neo4j.Node))
-			if err != nil {
-				return moodWithUserRecord, err
-			}
-		}
-
-	}
-
-	return moodWithUserRecord, nil
-}
-
-func (moodWithUserRecord *MoodWithUserRecord) getMapLabelProps(node neo4j.Node) errorHelper.CustomError {
+func (moodWithUserRecord *MoodWithUserRecord) getMapLabelProps(node neo4j.Node) helperTypes.CustomError {
 	for _, label := range node.Labels {
 		switch label {
 		case "Mood":
-			if err := parseNodeProps(node.Props, &moodWithUserRecord); err != nil {
+			if err := moodWithUserRecord.ParseMood(node.Props); err != nil {
 				return ParseMoodsError{
 					Message: constants.FailedParseMood,
 					Err:     err,
 				}
 			}
 		case "User":
-			if err := parseNodeProps(node.Props, &moodWithUserRecord.User); err != nil {
+			if err := moodWithUserRecord.ParseUser(node.Props); err != nil {
 				return ParseMoodsError{
 					Message: constants.FailedParseMood,
 					Err:     err,
@@ -80,8 +48,22 @@ func (moodWithUserRecord *MoodWithUserRecord) getMapLabelProps(node neo4j.Node) 
 	return nil
 }
 
-func parseNodeProps(data interface{}, parseData interface{}) error {
-	if err := httpHelper.JSONParse(data, &parseData); err != nil {
+func (moodWithUserRecord *MoodWithUserRecord) ParseMood(source interface{}) error {
+	json := helperTypes.Json[Mood]{
+		Payload: moodWithUserRecord.Mood,
+	}
+	if err := json.ParsePayload(source); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (moodWithUserRecord *MoodWithUserRecord) ParseUser(source interface{}) error {
+	json := helperTypes.Json[serializers.UserResponse]{
+		Payload: moodWithUserRecord.User,
+	}
+	if err := json.ParsePayload(source); err != nil {
 		return err
 	}
 

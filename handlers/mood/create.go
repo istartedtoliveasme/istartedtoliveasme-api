@@ -4,53 +4,45 @@ import (
 	"api/configs"
 	"api/constants"
 	moodModel "api/database/models/mood-model"
-	userModel "api/database/models/user-model"
-	"api/handlers/mood/typings"
-	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"math/rand"
+	"strconv"
+	"time"
 )
 
 func CreateHandler(c *gin.Context) {
-	var body typings.Body
-	var header httpHelper.Header
+	httpResponse := responses.HttpResponse[moodModel.MoodWithUserRecord]{
+		Message: constants.Success,
+	}
+	var body Body
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	err := c.ShouldBind(&body)
+	bindError := c.ShouldBind(&body)
 
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
+	if bindError != nil {
+		httpResponse.Err = responses.BindError{
+			Message: constants.FailedBindParams,
+			Err:     bindError,
+		}
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
 	}
 
-	err = c.ShouldBindHeader(&header)
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
+	mood := moodModel.Mood{
+		Id:          strconv.Itoa(rand.Int()),
+		Icon:        body.Icon,
+		Title:       body.Title,
+		Description: body.Description,
+		CreatedAt:   time.Now().UTC(),
 	}
 
-	record := createMoodRecord(body)
+	httpResponse.Payload, httpResponse.Err = mood.Create(body.CreateMoodPropertyFactory(session))
 
-	getByEmailProps := userModel.GetByEmailProps{
-		GetEmail: func() string {
-			return "istartedtoliveasme@gmail.com"
-		},
-		GetSession: func() neo4j.Session {
-			return session
-		},
-	}
-	userRecord, err := userModel.GetByEmail(getByEmailProps)
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
-	}
-
-	moodRecord, err := moodModel.CreateMood(CreateMoodPropertyFactory(session, record, userRecord))
-
-	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
-	}
-
-	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.Success, moodRecord))
+	switch c.IsAborted() || httpResponse.Err != nil {
+	case true:
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
+	default:
+		c.JSON(httpResponse.OkRequest())
 	}
 }

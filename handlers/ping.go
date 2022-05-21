@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func PingHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, httpHelper.JSON{
+	c.JSON(http.StatusOK, helperTypes.JsonPayload{
 		"message": "pong",
 	})
 }

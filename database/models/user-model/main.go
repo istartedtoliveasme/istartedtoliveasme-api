@@ -3,28 +3,90 @@ package userModel
 import (
 	"api/constants"
 	"api/database/models/typings"
-	"api/database/structures"
 	"api/helpers"
-	"api/helpers/error-helper"
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"encoding/json"
+	"errors"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"math/rand"
+	"strconv"
 )
 
-type ModelCypherQuery interface {
-	GetByEmail(tx neo4j.Transaction) func(email string) (neo4j.Result, error)
-	Create(tx neo4j.Transaction) func(c CreateProps) (neo4j.Result, error)
+type User struct {
+	Id        string `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"_"` // Ignore password from Json parse
 }
 
-func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
+type UserError struct {
+	Message string
+	Err     error
+}
+
+func (e UserError) Error() string {
+	return e.Message
+}
+
+func (e UserError) Unwrap() error {
+	return e.Err
+}
+
+func (user User) ComparePassword(pass string) bool {
+	return pass == user.Password
+}
+
+func (user *User) SetFirstName(firstName string) error {
+	if len(firstName) <= 0 {
+		return errors.New(constants.RequiredFirstName)
+	}
+
+	user.FirstName = firstName
+	return nil
+}
+
+func (user *User) SetLastName(lastName string) error {
+	if len(lastName) <= 0 {
+		return errors.New(constants.RequiredLastName)
+	}
+
+	user.LastName = lastName
+	return nil
+}
+
+func (user *User) SetEmail(email string) error {
+	if len(email) <= 0 {
+		return errors.New(constants.RequiredEmail)
+	}
+
+	user.Email = email
+	return nil
+}
+
+func (user User) SetPassword(password string) error {
+	if len(password) <= 0 {
+		return errors.New(constants.RequiredPassword)
+	}
+
+	user.Password = password
+	return nil
+}
+
+type GetByIdCypher map[string]interface{}
+type GetByIdProps struct {
+	typings.GetSession
+	Id string
+}
+
+func (user *User) GetById(props GetByIdProps) helperTypes.CustomError {
 	cypher := "MATCH (u:User { id: $id }) RETURN u LIMIT 1"
-	params := httpHelper.JSON{"id": props.GetId()}
+	params := GetByIdCypher{"id": props.Id}
 
 	result, err := props.GetSession().Run(cypher, params)
 
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedCreateRecord,
 			Err:     err,
 		}
@@ -33,133 +95,140 @@ func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError
 	record, err := helpers.GetSingleRecord(result)
 
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedFetchRecord,
 			Err:     err,
 		}
 	}
 
-	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
-		return userRecord, typings.RecordError{
+	userJson := helperTypes.Json[User]{
+		Payload: *user,
+	}
+	if err = userJson.ParsePayload(record); err != nil {
+		return UserError{
 			Message: constants.FailedEncodeRecord,
 			Err:     err,
 		}
 	}
 
-	return userRecord, nil
+	return nil
 }
 
-func GetByEmail(props GetByEmailProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
+type GetByEmailCypher map[string]interface{}
+type GetByEmailProps struct {
+	typings.GetSession
+	Email string
+}
+
+func (user *User) GetByEmail(props GetByEmailProps) helperTypes.CustomError {
 	cypher := "MATCH (u:User { email: $email }) RETURN u LIMIT 1"
-	params := httpHelper.JSON{"email": props.GetEmail()}
+	params := GetByEmailCypher{"email": props.Email}
 
 	result, err := props.GetSession().Run(cypher, params)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.GetRecordFailed,
 			Err:     err,
 		}
 	}
 
 	if result == nil {
-		return userRecord, typings.RecordError{
-			Message: constants.FailedCreateRecord,
+		return UserError{
+			Message: constants.NotFoundRecord,
 		}
 	}
 
 	record, err := helpers.GetSingleRecord(result)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.GetRecordFailed,
 			Err:     err,
 		}
 	}
 
-	if record == nil {
-		return userRecord, nil
+	userJson := helperTypes.Json[User]{
+		Payload: *user,
 	}
-
-	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
-		return userRecord, httpHelper.JSONParseError{
+	if err = userJson.ParsePayload(record); err != nil {
+		return UserError{
 			Message: constants.FailedParseClaim,
 			Err:     err,
 		}
 	}
 
-	return userRecord, nil
+	return nil
 }
 
-func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
-	var emptyRecord structures.UserRecord
-	tx := props.GetSession()
-	cypher := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
+type UserCreateCypher map[string]interface{}
+type CreateProps struct {
+	typings.GetSession
+}
 
-	userRecord, err := props.GetUserData()
+func (user *User) Create(props CreateProps) helperTypes.CustomError {
+	tx := props.GetSession()
+	cypher := "MATCH (u:User {email:$email}) WHERE u IS NULL " +
+		"CREATE (user:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) " +
+		"RETURN user LIMIT 1"
+
+	params := UserCreateCypher{
+		"id":        strconv.Itoa(rand.Int()),
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+		"email":     user.Email,
+		"password":  user.Password,
+	}
+
+	records, err := tx.Run(cypher, params)
 
 	// if error is nil means the record exist
-	if userRecord != emptyRecord && err == nil {
-		return userRecord, typings.RecordError{
+	if records == nil {
+		return UserError{
 			Message: constants.DuplicateRecord,
 			Err:     err,
 		}
 	}
 
-	input := props.GetUserInput()
-	params := httpHelper.JSON{
-		"id":        input.Id,
-		"firstName": input.FirstName,
-		"lastName":  input.LastName,
-		"email":     input.Email,
-		"password":  input.Password,
-	}
-
-	records, err := tx.Run(cypher, params)
-
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedCreateRecord,
 			Err:     err,
 		}
 	}
 
-	userRecord, err = getUserSingleRecord(records)
+	err = user.BindRecord(records)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedFetchRecord,
 			Err:     err,
 		}
 	}
 
-	return userRecord, nil
+	return nil
 
 }
 
-func getUserSingleRecord(result neo4j.Result) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
-
+func (user *User) BindRecord(result neo4j.Result) helperTypes.CustomError {
 	singleRecord, err := helpers.GetSingleRecord(result)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.GetRecordFailed,
 		}
 	}
 
 	byteArray, err := json.Marshal(singleRecord)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedEncodeRecord,
 			Err:     err,
 		}
 	}
 
-	err = json.Unmarshal(byteArray, &userRecord)
+	err = json.Unmarshal(byteArray, &user)
 	if err != nil {
-		return userRecord, typings.RecordError{
+		return UserError{
 			Message: constants.FailedDecodeRecord,
 			Err:     err,
 		}
 	}
-	return userRecord, nil
+	return nil
 }

@@ -6,57 +6,50 @@ import (
 	zeroValues "api/constants/zero-values"
 	"api/database/models/typings"
 	userModel "api/database/models/user-model"
-	"api/database/structures"
-	errorHelper "api/helpers/error-helper"
-	"api/helpers/httpHelper"
 	jwtHelper "api/helpers/jwt-helper"
 	"api/helpers/serializers"
-	"errors"
+	helperTypes "api/helpers/typings"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"os"
 )
 
-func signInUser(userRecord structures.UserRecord) (httpHelper.JSON, errorHelper.CustomError) {
-	var claims httpHelper.JSON
-	var emptyUserRecord structures.UserRecord
-	var err errorHelper.CustomError
-	var serializedRecord serializers.UserSerializer
+type UserHandler userModel.User
 
-	if userRecord == emptyUserRecord {
-		return nil, typings.RecordError{
-			Message: constants.GetRecordFailed,
-			Err:     errors.New(constants.GetRecordFailed),
+func (user *UserHandler) SignIn() (jwtHelper.JWTClaim, helperTypes.CustomError) {
+	var jsonClaims helperTypes.Json[jwtHelper.JWTClaim]
+	var err helperTypes.CustomError
+	var serializedRecord serializers.UserResponse
+
+	if err = jsonClaims.ParsePayload(user); err != nil {
+		return jsonClaims.Payload, typings.RecordError{
+			Message: constants.FailedSerializeRecord,
+			Err:     err,
 		}
 	}
 
-	err = httpHelper.JSONParse(userRecord, &claims)
+	accessToken, err := user.GenerateAccessToken(jsonClaims.Payload)
 	if err != nil {
+		return jsonClaims.Payload, err
+	}
+
+	jsonUser := helperTypes.Json[serializers.UserResponse]{
+		Payload: serializedRecord,
+	}
+	if err = jsonUser.ParsePayload(user); err != nil {
 		return nil, typings.RecordError{
 			Message: constants.FailedSerializeRecord,
 			Err:     err,
 		}
 	}
 
-	accessToken, err := generateAccessToken(jwtHelper.JWTClaim(claims))
-	if err != nil {
-		return nil, err
-	}
-
-	if err = httpHelper.JSONParse(userRecord, &serializedRecord); err != nil {
-		return nil, typings.RecordError{
-			Message: constants.FailedSerializeRecord,
-			Err:     err,
-		}
-	}
-
-	return httpHelper.JSON{
+	return jwtHelper.JWTClaim{
 		"accessToken": accessToken,
 		"profile":     serializedRecord,
 	}, nil
 
 }
 
-func generateAccessToken(claim jwtHelper.JWTClaim) (string, errorHelper.CustomError) {
+func (user *UserHandler) GenerateAccessToken(claim jwtHelper.JWTClaim) (string, helperTypes.CustomError) {
 	var secret = []byte(os.Getenv(jwt.JwtSecret))
 
 	if claim == nil {
@@ -81,17 +74,13 @@ type Body struct {
 	Password string `form:"password" json:"password" binding:"required"`
 }
 
-func getByEmailFactory(s neo4j.Session, body Body) userModel.GetByEmailProps {
+func (body *Body) GetByEmailFactory(s neo4j.Session) userModel.GetByEmailProps {
 	getSession := func() neo4j.Session {
 		return s
 	}
 
-	getEmail := func() string {
-		return body.Email
-	}
-
 	return userModel.GetByEmailProps{
 		GetSession: getSession,
-		GetEmail:   getEmail,
+		Email:      body.Email,
 	}
 }

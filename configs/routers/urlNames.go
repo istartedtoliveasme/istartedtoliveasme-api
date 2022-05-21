@@ -1,5 +1,7 @@
 package routers
 
+import "path"
+
 const (
 	Version1 = "v1"
 	SignIn   = "signin"
@@ -9,6 +11,8 @@ const (
 	Profile  = "profile"
 )
 
-func GetURLPath(routeName string) string {
-	return "/" + routeName
+type UrlPath string
+
+func (urlPath *UrlPath) Slugs(paths ...string) string {
+	return path.Join(paths...)
 }

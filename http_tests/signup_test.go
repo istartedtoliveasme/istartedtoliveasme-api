@@ -2,7 +2,7 @@ package http_tests
 
 import (
 	routers2 "api/configs/routers"
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,8 @@ import (
 )
 
 func TestSignUpShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
-	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignUp)
+	basePath := routers2.UrlPath(routers2.Version1)
+	url := basePath.Slugs(routers2.SignUp)
 	router := gin.Default()
 	routers2.GetV1Routers(router)
 
@@ -28,7 +29,8 @@ func TestSignUpShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
 }
 
 func TestSignUpShouldAuthorized(t *testing.T) {
-	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignUp)
+	basePath := routers2.UrlPath(routers2.Version1)
+	url := basePath.Slugs(routers2.SignUp)
 	router := gin.Default()
 	routers2.GetV1Routers(router)
 
@@ -38,7 +40,7 @@ func TestSignUpShouldAuthorized(t *testing.T) {
 	fakeLastName := "randomFirstName"
 	fakeEmail := strconv.Itoa(rand.Int()) + "@gmail.com"
 
-	jsonBody := httpHelper.JSON{
+	jsonBody := helperTypes.JsonPayload{
 		"firstName": fakeFirstName,
 		"lastName":  fakeLastName,
 		"email":     fakeEmail,

@@ -4,46 +4,64 @@ import (
 	"api/configs"
 	"api/constants"
 	userModel "api/database/models/user-model"
-	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"api/helpers/serializers"
+	helperTypes "api/helpers/typings"
 	"github.com/gin-gonic/gin"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
 func Handler(c *gin.Context) {
-	var userSerialized serializers.UserSerializer
+	httpResponse := responses.HttpResponse[serializers.UserResponse]{
+		Message: constants.Success,
+	}
+	var userSerialized serializers.UserResponse
 	var params Params
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedBindParams, []error{err}))
+	if bindError := c.ShouldBindUri(&params); bindError != nil {
+		httpResponse.Err = responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
 	}
 
-	getByEmailProps := userModel.GetByEmailProps{
-		GetSession: func() neo4j.Session {
-			return session
-		},
-		GetEmail: func() string {
-			return params.Email
-		},
-	}
-
-	record, err := userModel.GetByEmail(getByEmailProps)
+	var user userModel.User
+	err := user.GetByEmail(params.GetByEmailController(session))
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.NotFoundRecord, []error{err}))
+		httpResponse.Err = err
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
 	}
 
-	if err = httpHelper.JSONParse(record, &userSerialized); err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedSerializeRecord, []error{err}))
+	userJson := helperTypes.Json[serializers.UserResponse]{
+		Payload: userSerialized,
+	}
+	if err = userJson.ParsePayload(user); err != nil {
+		httpResponse.Err = err
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
 	}
 
-	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.Success, userSerialized))
+	httpResponse.Payload = userSerialized
+
+	switch c.IsAborted() || httpResponse.Err != nil {
+	case true:
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
+	default:
+		c.JSON(httpResponse.OkRequest())
 	}
 }
 
 type Params struct {
 	Email string `uri:"email" binding:"required"`
+}
+
+func (p Params) GetByEmailController(session neo4j.Session) userModel.GetByEmailProps {
+	return userModel.GetByEmailProps{
+		GetSession: func() neo4j.Session {
+			return session
+		},
+		Email: p.Email,
+	}
 }

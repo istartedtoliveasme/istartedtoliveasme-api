@@ -9,17 +9,24 @@ import (
 )
 
 func GetAllHandler(c *gin.Context) {
+	httpResponse := responses.HttpResponse[[]moodModel.MoodWithUserRecord]{
+		Message: constants.Success,
+	}
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	records, err := moodModel.GetMoods(session)
-
+	var mood moodModel.Mood
+	records, err := mood.GetMoods(session)
+	httpResponse.Payload = records
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
+		httpResponse.Err = err
 	}
 
-	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.Success, records))
+	switch c.IsAborted() || httpResponse.Err != nil {
+	case true:
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
+	default:
+		c.JSON(httpResponse.OkRequest())
 	}
 
 }

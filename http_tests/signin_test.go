@@ -3,7 +3,7 @@ package http_tests
 import (
 	routers2 "api/configs/routers"
 	"api/constants"
-	"api/helpers/httpHelper"
+	helperTypes "api/helpers/typings"
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -16,12 +16,13 @@ import (
 )
 
 func TestSignInShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
-	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
+	url := routers2.UrlPath(routers2.Version1)
+	url.Slugs(routers2.SignIn)
 	router := gin.Default()
 	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, url, nil)
+	req, _ := http.NewRequest(http.MethodPost, string(url), nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -30,7 +31,8 @@ func TestSignInShouldNotAuthorizedWhenEmptyBody(t *testing.T) {
 
 func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 	// GIVEN the initial dependency is declared
-	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
+	url := routers2.UrlPath(routers2.Version1)
+	url.Slugs(routers2.SignIn)
 	router := gin.Default()
 	routers2.GetV1Routers(router)
 	w := httptest.NewRecorder()
@@ -39,9 +41,11 @@ func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 	// AND I have a non-existing password
 	fakePassword := strconv.Itoa(rand.Int())
 	// AND I have the serialized json format of the API body
-	jsonBody := httpHelper.JSON{
-		"username": fakeUsername,
-		"password": fakePassword,
+	jsonBody := helperTypes.Json[helperTypes.JsonPayload]{
+		Payload: helperTypes.JsonPayload{
+			"username": fakeUsername,
+			"password": fakePassword,
+		},
 	}
 
 	jsonByte, err := json.Marshal(jsonBody)
@@ -53,7 +57,7 @@ func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 	jsonBuffer := bytes.NewBuffer(jsonByte)
 
 	// WHEN I invoke the http request
-	req, _ := http.NewRequest(http.MethodPost, url, jsonBuffer)
+	req, _ := http.NewRequest(http.MethodPost, string(url), jsonBuffer)
 
 	router.ServeHTTP(w, req)
 
@@ -66,7 +70,8 @@ func TestSignInShouldThrowPasswordNotMatch(t *testing.T) {
 }
 
 func TestSignInShouldAuthorized(t *testing.T) {
-	url := routers2.GetURLPath(routers2.Version1) + routers2.GetURLPath(routers2.SignIn)
+	url := routers2.UrlPath(routers2.Version1)
+	url.Slugs(routers2.SignIn)
 	router := gin.Default()
 	routers2.GetV1Routers(router)
 
@@ -75,9 +80,11 @@ func TestSignInShouldAuthorized(t *testing.T) {
 	fakeUsername := "istartedtoliveasme"
 	fakePassword := strconv.Itoa(rand.Int())
 
-	jsonBody := httpHelper.JSON{
-		"username": fakeUsername,
-		"password": "123456",
+	jsonBody := helperTypes.Json[helperTypes.JsonPayload]{
+		Payload: helperTypes.JsonPayload{
+			"username": fakeUsername,
+			"password": "123456",
+		},
 	}
 
 	jsonByte, err := json.Marshal(jsonBody)
@@ -88,7 +95,7 @@ func TestSignInShouldAuthorized(t *testing.T) {
 
 	jsonBuffer := bytes.NewBuffer(jsonByte)
 
-	req, _ := http.NewRequest(http.MethodPost, url, jsonBuffer)
+	req, _ := http.NewRequest(http.MethodPost, string(url), jsonBuffer)
 
 	router.ServeHTTP(w, req)
 
