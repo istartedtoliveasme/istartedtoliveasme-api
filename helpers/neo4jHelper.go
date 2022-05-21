@@ -18,7 +18,7 @@ func GetSingleRecord(result neo4j.Result) (httpHelper.JSON, error) {
 		return nil, err
 	}
 
-	singleProps, err := getSinglePropsByRecord(*record)
+	singleProps, err := GetSinglePropsByRecord(*record)
 
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomEr
 
 	for _, record := range collections {
 		var parsePayload httpHelper.JSON
-		data, err := getSinglePropsByRecord(*record)
+		data, err := GetSinglePropsByRecord(*record)
 		if parseErr := httpHelper.JSONParse(data, &parsePayload); err != nil || parseErr != nil {
 			return payload, typings.RecordError{
 				Message: constants.FailedFetchRecord,
@@ -59,7 +59,7 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomEr
 	return payload, nil
 }
 
-func getSinglePropsByRecord(record neo4j.Record) (interface{}, errorHelper.CustomError) {
+func GetSinglePropsByRecord(record neo4j.Record) (interface{}, errorHelper.CustomError) {
 
 	if len(record.Values) > 0 {
 		return record.Values[0].(neo4j.Node).Props, nil

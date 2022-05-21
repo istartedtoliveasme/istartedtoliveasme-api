@@ -5,7 +5,6 @@ import (
 	"api/database/models/typings"
 	"api/helpers/error-helper"
 	"api/helpers/serializers"
-	"fmt"
 	"strings"
 )
 
@@ -60,8 +59,6 @@ func (h Header) DecodeAuthorizationBearer() (serializers.UserSerializer, errorHe
 			Err:     err,
 		}
 	}
-
-	fmt.Println(userSerializer)
 
 	return userSerializer, nil
 }

@@ -42,8 +42,7 @@ func signInUser(userRecord structures.UserRecord) (httpHelper.JSON, errorHelper.
 		return nil, err
 	}
 
-	err = httpHelper.JSONParse(userRecord, &serializedRecord)
-	if err != nil {
+	if err = httpHelper.JSONParse(userRecord, &serializedRecord); err != nil {
 		return nil, typings.RecordError{
 			Message: constants.FailedSerializeRecord,
 			Err:     err,

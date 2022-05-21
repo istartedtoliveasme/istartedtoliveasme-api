@@ -3,7 +3,7 @@ package constants
 const (
 	InvalidEmail          = "Invalid Email"
 	MismatchPassword      = "Password doesn't match"
-	ExistUserName         = "Email already exist"
+	ExistEmail            = "Email already exist"
 	RequiredFirstName     = "First Name is required"
 	RequiredLastName      = "Last Name is required"
 	RequiredEmail         = "Email is required"
@@ -22,4 +22,8 @@ const (
 	FailedParseClaim      = "Failed to parse JWT Claims"
 	FailedSignClaim       = "Failed to sign JWT Claims"
 	EmptyJWTClaim         = "JWT Claims should not be empty"
+	FailedBindParams      = "Failed to bind route parameters"
+	NotFoundRecord        = "Record not found"
+	FailedParseMood       = "Failed to parse mood"
+	NodeLabelNotFound     = "Node label not found"
 )

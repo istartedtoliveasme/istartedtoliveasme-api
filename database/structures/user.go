@@ -6,11 +6,11 @@ import (
 )
 
 type UserRecord struct {
-	Id int `json:"id"`
+	Id        string `json:"id"`
 	FirstName string `json:"firstName"`
-	LastName string `json:"lastName"`
-	Email string `json:"email"`
-	Password string `jso:"_"` // Ignore password from JSON parse
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"_"` // Ignore password from JSON parse
 }
 
 func (u UserRecord) ComparePassword(pass string) bool {

@@ -10,6 +10,7 @@ import (
 	"api/helpers/serializers"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"math/rand"
+	"strconv"
 )
 
 type Body struct {
@@ -33,7 +34,7 @@ func getRecordSerializer(userRecord structures.UserRecord) (serializers.UserSeri
 
 }
 
-func createUserFactory(s neo4j.Session, body Body) userModel.CreateProps {
+func createUserFactory(s neo4j.Session, body Body) (userModel.CreateProps, errorHelper.CustomError) {
 	getSession := func() neo4j.Session {
 		return s
 	}
@@ -47,9 +48,11 @@ func createUserFactory(s neo4j.Session, body Body) userModel.CreateProps {
 			},
 		}
 		userRecord, err := userModel.GetByEmail(props)
-
 		if err != nil {
-			return userRecord, err
+			return userRecord, typings.RecordError{
+				Message: constants.GetRecordFailed,
+				Err:     err,
+			}
 		}
 
 		return userRecord, nil
@@ -57,7 +60,7 @@ func createUserFactory(s neo4j.Session, body Body) userModel.CreateProps {
 
 	getUserInput := func() structures.UserRecord {
 		return structures.UserRecord{
-			Id:        rand.Int(),
+			Id:        strconv.Itoa(rand.Int()),
 			FirstName: body.FirstName,
 			LastName:  body.LastName,
 			Email:     body.Email,
@@ -69,5 +72,5 @@ func createUserFactory(s neo4j.Session, body Body) userModel.CreateProps {
 		GetSession:   getSession,
 		GetUserData:  getUserData,
 		GetUserInput: getUserInput,
-	}
+	}, nil
 }

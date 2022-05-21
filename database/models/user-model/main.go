@@ -9,7 +9,6 @@ import (
 	"api/helpers/httpHelper"
 	"encoding/json"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"math/rand"
 )
 
 type ModelCypherQuery interface {
@@ -50,23 +49,42 @@ func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError
 	return userRecord, nil
 }
 
-func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
+func GetByEmail(props GetByEmailProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	cypher := "MATCH (u:User { email: $email }) RETURN u LIMIT 1"
 	params := httpHelper.JSON{"email": props.GetEmail()}
 
 	result, err := props.GetSession().Run(cypher, params)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.GetRecordFailed,
+			Err:     err,
+		}
+	}
+
+	if result == nil {
+		return userRecord, typings.RecordError{
+			Message: constants.FailedCreateRecord,
+		}
 	}
 
 	record, err := helpers.GetSingleRecord(result)
 	if err != nil {
-		return userRecord, err
+		return userRecord, typings.RecordError{
+			Message: constants.GetRecordFailed,
+			Err:     err,
+		}
+	}
+
+	if record == nil {
+		return userRecord, nil
 	}
 
 	if err = httpHelper.JSONParse(record, &userRecord); err != nil {
-		return userRecord, err
+		return userRecord, httpHelper.JSONParseError{
+			Message: constants.FailedParseClaim,
+			Err:     err,
+		}
 	}
 
 	return userRecord, nil
@@ -74,13 +92,14 @@ func GetByEmail(props GetByEmailProps) (structures.UserRecord, error) {
 
 func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
+	var emptyRecord structures.UserRecord
 	tx := props.GetSession()
 	cypher := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
 
-	_, err := props.GetUserData()
+	userRecord, err := props.GetUserData()
 
 	// if error is nil means the record exist
-	if err == nil {
+	if userRecord != emptyRecord && err == nil {
 		return userRecord, typings.RecordError{
 			Message: constants.DuplicateRecord,
 			Err:     err,
@@ -89,7 +108,7 @@ func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) 
 
 	input := props.GetUserInput()
 	params := httpHelper.JSON{
-		"id":        rand.Int(),
+		"id":        input.Id,
 		"firstName": input.FirstName,
 		"lastName":  input.LastName,
 		"email":     input.Email,
