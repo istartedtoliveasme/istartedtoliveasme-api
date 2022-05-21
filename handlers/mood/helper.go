@@ -20,13 +20,10 @@ func createMoodRecord(body typings.Body) moodModel.Mood {
 	}
 }
 
-func CreateMoodPropertyFactory(s neo4j.Session, m moodModel.Mood, u structures.UserRecord) moodModel.Props {
+func CreateMoodPropertyFactory(s neo4j.Session, u structures.UserRecord) moodModel.Props {
 	return moodModel.Props{
 		GetSession: func() neo4j.Session {
 			return s
-		},
-		GetMood: func() moodModel.Mood {
-			return m
 		},
 		GetUser: func() structures.UserRecord {
 			return u

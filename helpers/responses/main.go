@@ -1,19 +1,27 @@
 package responses
 
 import (
+	errorHelper "api/helpers/error-helper"
 	"api/helpers/httpHelper"
 	"net/http"
 )
 
-func BadRequest(message string, errs []error) (int, httpHelper.JSON) {
-	var errorMessages []string
+type BindError struct {
+	Message string
+	Err     error
+}
 
-	for _, eachError := range errs {
-		errorMessages = append(errorMessages, eachError.Error())
-	}
+func (r BindError) Error() string {
+	return r.Message
+}
 
+func (r BindError) Unwrap() error {
+	return r.Err
+}
+
+func BadRequest(message string, errs errorHelper.CustomError) (int, httpHelper.JSON) {
 	return http.StatusBadRequest, httpHelper.JSON{
-		"errors":  errorMessages,
+		"error":   errs.Unwrap().Error(),
 		"message": message,
 	}
 }

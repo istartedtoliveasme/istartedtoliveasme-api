@@ -15,7 +15,7 @@ func GetAllHandler(c *gin.Context) {
 	records, err := moodModel.GetMoods(session)
 
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, err))
 	}
 
 	if !c.IsAborted() {
