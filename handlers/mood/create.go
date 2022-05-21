@@ -3,7 +3,6 @@ package mood
 import (
 	"api/configs"
 	"api/constants"
-	moodModel "api/database/models/mood-model"
 	userModel "api/database/models/user-model"
 	"api/handlers/mood/typings"
 	"api/helpers/httpHelper"
@@ -18,18 +17,24 @@ func CreateHandler(c *gin.Context) {
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	err := c.ShouldBind(&body)
+	bindError := c.ShouldBind(&body)
 
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
+	if bindError != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, responses.BindError{
+			Message: constants.FailedBindParams,
+			Err:     bindError,
+		}))
 	}
 
-	err = c.ShouldBindHeader(&header)
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
+	bindError = c.ShouldBindHeader(&header)
+	if bindError != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}))
 	}
 
-	record := createMoodRecord(body)
+	mood := createMoodRecord(body)
 
 	getByEmailProps := userModel.GetByEmailProps{
 		GetEmail: func() string {
@@ -41,13 +46,13 @@ func CreateHandler(c *gin.Context) {
 	}
 	userRecord, err := userModel.GetByEmail(getByEmailProps)
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, err))
 	}
 
-	moodRecord, err := moodModel.CreateMood(CreateMoodPropertyFactory(session, record, userRecord))
+	moodRecord, err := mood.Create(CreateMoodPropertyFactory(session, userRecord))
 
 	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, err))
 	}
 
 	if !c.IsAborted() {

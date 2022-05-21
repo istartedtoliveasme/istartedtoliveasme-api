@@ -19,36 +19,39 @@ func Handler(c *gin.Context) {
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	if err := c.ShouldBindJSON(&body); err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, []error{err}))
+	if bindError := c.ShouldBindJSON(&body); bindError != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}))
 	}
 
 	createUserProps, err := createUserFactory(session, body)
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(err.Error(), []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(err.Error(), err))
 	}
 
 	userRecord, err := userModel.Create(createUserProps)
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, err))
 	}
 
 	serializedRecord, err := getRecordSerializer(userRecord)
 	err = httpHelper.JSONParse(serializedRecord, &jwtClaims)
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedParseClaim, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedParseClaim, err))
 	}
 
 	claim := jwtHelper.JWTClaim(jwtClaims)
 
 	accessToken, err := claim.SignClaim([]byte(os.Getenv(jwt.JwtSecret)))
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedParseClaim, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedParseClaim, err))
 	}
 
 	if !c.IsAborted() && err != nil {
 
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, err))
 	}
 
 	if !c.IsAborted() {

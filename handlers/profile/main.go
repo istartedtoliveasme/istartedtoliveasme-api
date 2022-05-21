@@ -17,8 +17,11 @@ func Handler(c *gin.Context) {
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	if err := c.ShouldBindUri(&params); err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedBindParams, []error{err}))
+	if bindError := c.ShouldBindUri(&params); bindError != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedBindParams, responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}))
 	}
 
 	getByEmailProps := userModel.GetByEmailProps{
@@ -32,11 +35,11 @@ func Handler(c *gin.Context) {
 
 	record, err := userModel.GetByEmail(getByEmailProps)
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.NotFoundRecord, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.NotFoundRecord, err))
 	}
 
 	if err = httpHelper.JSONParse(record, &userSerialized); err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedSerializeRecord, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedSerializeRecord, err))
 	}
 
 	if !c.IsAborted() {

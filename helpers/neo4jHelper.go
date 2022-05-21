@@ -6,6 +6,7 @@ import (
 	"api/helpers/error-helper"
 	"api/helpers/httpHelper"
 	"errors"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
@@ -60,9 +61,15 @@ func GetAllRecords(result neo4j.Result) ([]httpHelper.JSON, errorHelper.CustomEr
 }
 
 func GetSinglePropsByRecord(record neo4j.Record) (interface{}, errorHelper.CustomError) {
-
 	if len(record.Values) > 0 {
-		return record.Values[0].(neo4j.Node).Props, nil
+		for _, recordValue := range record.Values {
+			fmt.Println("%T", recordValue)
+			switch recordValue.(type) {
+			case neo4j.Node:
+				return recordValue.(neo4j.Node).Props, nil
+			}
+		}
+
 	}
 
 	return nil, typings.RecordError{

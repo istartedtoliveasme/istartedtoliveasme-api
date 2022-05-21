@@ -15,25 +15,28 @@ func Handler(c *gin.Context) {
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	err := c.ShouldBind(&body)
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
+	bindError := c.ShouldBind(&body)
+	if bindError != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}))
 	}
 
 	userRecord, err := userModel.GetByEmail(getByEmailFactory(session, body))
 
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, err))
 	}
 
 	response, err = signInUser(userRecord)
 
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, err))
 	}
 
 	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, err))
 	}
 
 	if !c.IsAborted() {

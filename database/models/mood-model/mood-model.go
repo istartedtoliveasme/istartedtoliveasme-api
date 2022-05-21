@@ -5,6 +5,7 @@ import (
 	"api/database/models/typings"
 	"api/database/structures"
 	"api/helpers"
+	"api/helpers/dataRecord"
 	"api/helpers/error-helper"
 	"api/helpers/httpHelper"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -19,14 +20,25 @@ type Mood struct {
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
+type MoodError struct {
+	Message string
+	Err     error
+}
+
+func (me MoodError) Error() string {
+	return me.Message
+}
+
+func (me MoodError) Unwrap() error {
+	return me.Err
+}
+
 type Props struct {
 	GetUser    func() structures.UserRecord
 	GetSession func() neo4j.Session
-	GetMood    func() Mood
 }
 
-func CreateMood(c Props) (interface{}, errorHelper.CustomError) {
-	m := c.GetMood()
+func (m Mood) Create(c Props) (interface{}, errorHelper.CustomError) {
 	u := c.GetUser()
 	props := httpHelper.JSON{
 		"userId":      u.Id,
@@ -63,6 +75,7 @@ func CreateMood(c Props) (interface{}, errorHelper.CustomError) {
 }
 
 func GetMoods(session neo4j.Session) ([]MoodWithUserRecord, errorHelper.CustomError) {
+	var items []MoodWithUserRecord
 	cypher := "MATCH (m:Mood)-[r:HAS_USER]->(u:User) RETURN *"
 	records, err := session.Run(cypher, nil)
 
@@ -78,7 +91,25 @@ func GetMoods(session neo4j.Session) ([]MoodWithUserRecord, errorHelper.CustomEr
 		return nil, nil
 	}
 
-	items, err := ParseMoods(collection)
+	var moodWithUserRecord MoodWithUserRecord
+	dataRecords := dataRecord.DataRecordCollections(collection)
+	bindItems, err := dataRecords.Bind(moodWithUserRecord.getMapLabelProps)
+
+	for _, bindItem := range bindItems {
+		if err := moodWithUserRecord.ParseMood(bindItem); err != nil {
+			return nil, MoodError{
+				Message: constants.FailedParseMood,
+				Err:     err,
+			}
+		}
+		if err := moodWithUserRecord.ParseUser(bindItem); err != nil {
+			return nil, MoodError{
+				Message: constants.FailedParseMood,
+				Err:     err,
+			}
+		}
+		items = append(items, moodWithUserRecord)
+	}
 
 	return items, nil
 }
