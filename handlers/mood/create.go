@@ -4,11 +4,12 @@ import (
 	"api/configs"
 	"api/constants"
 	moodModel "api/database/models/mood-model"
+	userModel "api/database/models/user-model"
 	"api/handlers/mood/typings"
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
 func CreateHandler(c *gin.Context) {
@@ -28,22 +29,28 @@ func CreateHandler(c *gin.Context) {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
 	}
 
-	decodedUserSerializer, err := header.DecodeAuthorizationBearer()
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
-	}
-
-	fmt.Println(decodedUserSerializer)
-
 	record := createMoodRecord(body)
 
-	_, err = moodModel.CreateMood(CreateMoodPropertyFactory(session, record))
+	getByEmailProps := userModel.GetByEmailProps{
+		GetEmail: func() string {
+			return "istartedtoliveasme@gmail.com"
+		},
+		GetSession: func() neo4j.Session {
+			return session
+		},
+	}
+	userRecord, err := userModel.GetByEmail(getByEmailProps)
+	if err != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.GetRecordFailed, []error{err}))
+	}
+
+	moodRecord, err := moodModel.CreateMood(CreateMoodPropertyFactory(session, record, userRecord))
 
 	if !c.IsAborted() && err != nil {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedCreateMood, []error{err}))
 	}
 
 	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.Success, record))
+		c.JSON(responses.OkRequest(constants.Success, moodRecord))
 	}
 }
