@@ -33,10 +33,10 @@ func Handler(c *gin.Context) {
 	}
 
 	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistUserName, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
 	}
 
 	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.RegisteredSuccess, response))
+		c.JSON(responses.OkRequest(constants.Authorized, response))
 	}
 }

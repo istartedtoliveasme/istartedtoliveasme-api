@@ -7,17 +7,16 @@ import (
 	"api/helpers"
 	"api/helpers/error-helper"
 	"api/helpers/httpHelper"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"time"
 )
 
 type Mood struct {
-	Id          int
-	Icon        string
-	Title       string
-	Description string
-	CreatedAt   time.Time
+	Id          string    `json:"id"`
+	Icon        string    `json:"icon"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type Props struct {
@@ -37,7 +36,11 @@ func CreateMood(c Props) (interface{}, errorHelper.CustomError) {
 		"description": m.Description,
 		"createdAt":   m.CreatedAt,
 	}
-	cypher := "MATCH(u: User {email: $userId}) CREATE (m:Mood {id: $id, icon: $icon, title: $title, description: $description, createdAt: $createdAt }) RETURN m"
+	cypher := "MATCH (u:User) WHERE u.id = $userId " +
+		"CREATE (m:Mood {id: $id, icon: $icon, title: $title, description: $description, createdAt: $createdAt }) " +
+		"CREATE (m)-[:HAS_USER]->(u), (u)-[:HAS_MOOD]->(m)  " +
+		"RETURN m"
+
 	record, err := c.GetSession().Run(cypher, props)
 
 	if err != nil {
@@ -47,23 +50,7 @@ func CreateMood(c Props) (interface{}, errorHelper.CustomError) {
 		}
 	}
 
-	return record, nil
-}
-
-func GetMoods(session neo4j.Session) ([]httpHelper.JSON, errorHelper.CustomError) {
-	cypher := "MATCH (m:Mood) RETURN *"
-	records, err := session.Run(cypher, nil)
-
-	fmt.Println(records)
-
-	if err != nil {
-		return nil, typings.RecordError{
-			Message: constants.GetRecordFailed,
-			Err:     err,
-		}
-	}
-
-	serialize, err := helpers.GetAllRecords(records)
+	serialize, err := helpers.GetAllRecords(record)
 
 	if err != nil {
 		return nil, typings.RecordError{
@@ -73,4 +60,25 @@ func GetMoods(session neo4j.Session) ([]httpHelper.JSON, errorHelper.CustomError
 	}
 
 	return serialize, nil
+}
+
+func GetMoods(session neo4j.Session) ([]MoodWithUserRecord, errorHelper.CustomError) {
+	cypher := "MATCH (m:Mood)-[r:HAS_USER]->(u:User) RETURN *"
+	records, err := session.Run(cypher, nil)
+
+	if err != nil {
+		return nil, typings.RecordError{
+			Message: constants.GetRecordFailed,
+			Err:     err,
+		}
+	}
+
+	collection, err := records.Collect()
+	if err != nil {
+		return nil, nil
+	}
+
+	items, err := ParseMoods(collection)
+
+	return items, nil
 }

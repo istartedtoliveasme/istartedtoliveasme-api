@@ -23,10 +23,14 @@ func Handler(c *gin.Context) {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, []error{err}))
 	}
 
-	userRecord, err := userModel.Create(createUserFactory(session, body))
+	createUserProps, err := createUserFactory(session, body)
+	if err != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(err.Error(), []error{err}))
+	}
 
-	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistUserName, []error{err}))
+	userRecord, err := userModel.Create(createUserProps)
+	if err != nil {
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
 	}
 
 	serializedRecord, err := getRecordSerializer(userRecord)
@@ -44,7 +48,7 @@ func Handler(c *gin.Context) {
 
 	if !c.IsAborted() && err != nil {
 
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistUserName, []error{err}))
+		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
 	}
 
 	if !c.IsAborted() {
