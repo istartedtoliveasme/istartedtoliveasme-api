@@ -4,39 +4,46 @@ import (
 	"api/configs"
 	"api/constants"
 	userModel "api/database/models/user-model"
-	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
 )
 
 func Handler(c *gin.Context) {
+	httpResponse := responses.HttpResponse{
+		Message: constants.Authorized,
+	}
 	var body Body
-	var response httpHelper.JSON
 	_, session := configs.StartNeo4jDriver()
 	defer session.Close()
 
-	err := c.ShouldBind(&body)
+	bindError := c.ShouldBind(&body)
+	if bindError != nil {
+		httpResponse.Message = constants.FailedAuthentication
+		httpResponse.Err = responses.BindError{
+			Message: constants.FailedToBindRequestBody,
+			Err:     bindError,
+		}
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
+	}
+
+	var user userModel.User
+	err := user.GetByEmail(body.GetByEmailFactory(session))
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
+		httpResponse.Message = constants.FailedAuthentication
+		httpResponse.Err = err
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
 	}
 
-	userRecord, err := userModel.GetByEmail(getByEmailFactory(session, body))
-
+	var userHandler = UserHandler(user)
+	httpResponse.Payload, err = userHandler.SignIn()
 	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
+		httpResponse.Err = err
 	}
 
-	response, err = signInUser(userRecord)
-
-	if err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.FailedAuthentication, []error{err}))
-	}
-
-	if !c.IsAborted() && err != nil {
-		c.AbortWithStatusJSON(responses.BadRequest(constants.ExistEmail, []error{err}))
-	}
-
-	if !c.IsAborted() {
-		c.JSON(responses.OkRequest(constants.Authorized, response))
+	switch httpResponse.Err != nil {
+	case true:
+		c.AbortWithStatusJSON(httpResponse.BadRequest())
+	default:
+		c.JSON(httpResponse.OkRequest())
 	}
 }

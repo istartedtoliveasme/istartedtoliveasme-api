@@ -1,9 +1,8 @@
-package httpHelper
+package types
 
 import (
 	"api/constants"
 	"api/database/models/typings"
-	"api/helpers/error-helper"
 	"api/helpers/serializers"
 	"strings"
 )
@@ -25,7 +24,7 @@ func (hErr HeaderError) Unwrap() error {
 	return hErr.Err
 }
 
-func (h Header) GetAuthorizationBearer() (string, errorHelper.CustomError) {
+func (h Header) GetAuthorizationBearer() (string, CustomError) {
 	auth := strings.Fields(h.Authorization)
 	var bearer string
 
@@ -44,16 +43,17 @@ func (h Header) GetAuthorizationBearer() (string, errorHelper.CustomError) {
 
 }
 
-func (h Header) DecodeAuthorizationBearer() (serializers.UserSerializer, errorHelper.CustomError) {
-	var userSerializer serializers.UserSerializer
+func (h Header) DecodeAuthorizationBearer() (serializers.UserResponse, CustomError) {
+	var userSerializer serializers.UserResponse
 
 	bearerToken, err := h.GetAuthorizationBearer()
-
 	if err != nil {
 		return userSerializer, err
 	}
 
-	if err := JSONParse(bearerToken, &userSerializer); err != nil {
+	var json = Json(userSerializer)
+
+	if err := json.Parse(bearerToken); err != nil {
 		return userSerializer, typings.RecordError{
 			Message: constants.FailedDecodeRecord,
 			Err:     err,

@@ -3,7 +3,7 @@ POST {{baseUrl}}/signin
 Content-type: application/json
 
 {
-  "email": "istartedtoliveasme@gmail.com",
+  "email": "istartsdfsdedtoliveasme@gmail.com",
   "password": "test1234"
 }
 

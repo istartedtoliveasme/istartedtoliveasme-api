@@ -2,7 +2,7 @@ package jwt_helper
 
 import (
 	"api/constants"
-	errorHelper "api/helpers/error-helper"
+	"api/helpers/types"
 	"fmt"
 	"github.com/golang-jwt/jwt"
 )
@@ -12,7 +12,7 @@ type JWTSign interface {
 }
 
 type IJWTError interface {
-	errorHelper.CustomError
+	types.CustomError
 }
 
 type JWTError struct {
@@ -31,7 +31,7 @@ func (JWTErr JWTError) Unwrap() error {
 type JWTClaim jwt.MapClaims
 
 // SignClaim use os.Getenv("JWT_SECRET") to get the secret key
-func (claims JWTClaim) SignClaim(secret []byte) (string, errorHelper.CustomError) {
+func (claims JWTClaim) SignClaim(secret []byte) (string, types.CustomError) {
 	// TODO :: use SigningString method that has a parameter of key
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims(claims)).SigningString()
 

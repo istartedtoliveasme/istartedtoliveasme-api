@@ -1,5 +1,5 @@
 ### GET Profile
-dGET {{baseUrl}}/profile/istartedtoliveasme@gmail.com
+GET {{baseUrl}}/profile/istartedtoliveasme@gmail.com
 Content-Type: application/json
 Authorization: Bearer {{accessToken}}
 

@@ -14,7 +14,9 @@ func TestPingRoute(t *testing.T) {
 	routers2.GetV1Routers(router)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, routers2.GetURLPath(routers2.Version1)+routers2.GetURLPath(routers2.Ping), nil)
+	basePath := routers2.UrlPath(routers2.Version1)
+	url := basePath.Slugs(routers2.Ping)
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
