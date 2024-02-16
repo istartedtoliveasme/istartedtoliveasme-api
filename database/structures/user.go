@@ -13,7 +13,11 @@ type UserRecord struct {
 	Password  string `json:"_"` // Ignore password from JSON parse
 }
 
+<<<<<<< HEAD
 func (u UserRecord) ComparePassword(pass string) bool {
+=======
+func (u *UserRecord) ComparePassword(pass string) bool {
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	return pass == u.Password
 }
 
@@ -44,7 +48,11 @@ func (u *UserRecord) SetEmail(email string) error {
 	return nil
 }
 
+<<<<<<< HEAD
 func (u UserRecord) SetPassword(password string) error {
+=======
+func (u *UserRecord) SetPassword(password string) error {
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	if len(password) <= 0 {
 		return errors.New(constants.RequiredPassword)
 	}

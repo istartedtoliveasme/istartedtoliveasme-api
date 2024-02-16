@@ -39,10 +39,14 @@ func createUserFactory(s neo4j.Session, body Body) (userModel.CreateProps, error
 		return s
 	}
 
+	run := func(cypherText string, params httpHelper.JSON) (neo4j.Result, error) {
+		return getSession().Run(cypherText, params)
+	}
+
 	getUserData := func() (structures.UserRecord, error) {
 		var userRecord structures.UserRecord
 		props := userModel.GetByEmailProps{
-			GetSession: getSession,
+			Run: run,
 			GetEmail: func() string {
 				return body.Email
 			},
@@ -69,8 +73,8 @@ func createUserFactory(s neo4j.Session, body Body) (userModel.CreateProps, error
 	}
 
 	return userModel.CreateProps{
-		GetSession:   getSession,
 		GetUserData:  getUserData,
 		GetUserInput: getUserInput,
+		Run:          run,
 	}, nil
 }

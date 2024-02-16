@@ -5,7 +5,10 @@ import (
 	"api/constants"
 	neo4jConstant "api/constants/neo4j"
 	"fmt"
+<<<<<<< HEAD
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+=======
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -13,21 +16,32 @@ import (
 func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 	// TODO :: mocking environment variables
 	getEnv := configs.LoadEnvironmentVariables()
+<<<<<<< HEAD
 	neo4jProps := configs.Neo4jDriverProps{
+=======
+	credentials := configs.Neo4jDriverCredentials{
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		Uri:      getEnv(neo4jConstant.Neo4jUri),
 		Username: getEnv(neo4jConstant.Neo4jUsername),
 		Password: getEnv(neo4jConstant.Neo4jPassword),
 	}
 	// TODO :: mocking driver
 	// GIVEN the session drive started
+<<<<<<< HEAD
 	_, session := configs.Neo4jDriver(neo4jProps)
+=======
+	configs.Neo4jDriver(credentials)
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	// AND a fake username
 	fakeRandomUsername := "randomUserName"
 	// AND getting the property dependency
 	props := GetByEmailProps{
+<<<<<<< HEAD
 		GetSession: func() neo4j.Session {
 			return session
 		},
+=======
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		GetEmail: func() string {
 			return fakeRandomUsername
 		},
@@ -44,20 +58,31 @@ func TestUserModelShouldBeInvalidUsername(t *testing.T) {
 
 func TestUserModelShouldNotThrowError(t *testing.T) {
 	configs.LoadEnvironmentVariables()
+<<<<<<< HEAD
 	neo4jProps := configs.Neo4jDriverProps{
+=======
+	neo4jProps := configs.Neo4jDriverCredentials{
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		Uri:      neo4jConstant.Neo4jUri,
 		Username: neo4jConstant.Neo4jUsername,
 		Password: neo4jConstant.Neo4jPassword,
 	}
 	// GIVEN the session drive started
+<<<<<<< HEAD
 	_, session := configs.Neo4jDriver(neo4jProps)
+=======
+	configs.Neo4jDriver(neo4jProps)
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	// AND a fake username
 	fakeRandomUsername := "istartedtoliveasme"
 	// AND getting the property dependency
 	props := GetByEmailProps{
+<<<<<<< HEAD
 		GetSession: func() neo4j.Session {
 			return session
 		},
+=======
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		GetEmail: func() string {
 			return fakeRandomUsername
 		},
@@ -74,20 +99,31 @@ func TestUserModelShouldNotThrowError(t *testing.T) {
 
 func TestUserModelShouldSeeResultValue(t *testing.T) {
 	configs.LoadEnvironmentVariables()
+<<<<<<< HEAD
 	neo4jProps := configs.Neo4jDriverProps{
+=======
+	neo4jProps := configs.Neo4jDriverCredentials{
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		Uri:      neo4jConstant.Neo4jUri,
 		Username: neo4jConstant.Neo4jUsername,
 		Password: neo4jConstant.Neo4jPassword,
 	}
 	// GIVEN the session drive started
+<<<<<<< HEAD
 	_, session := configs.Neo4jDriver(neo4jProps)
+=======
+	configs.Neo4jDriver(neo4jProps)
+>>>>>>> 8140b66 (Code improvements and update mod files)
 	// AND a fake username
 	fakeUserName := "istartedtoliveasme"
 	// AND getting the property dependency
 	props := GetByEmailProps{
+<<<<<<< HEAD
 		GetSession: func() neo4j.Session {
 			return session
 		},
+=======
+>>>>>>> 8140b66 (Code improvements and update mod files)
 		GetEmail: func() string {
 			return fakeUserName
 		},
