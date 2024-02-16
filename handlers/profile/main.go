@@ -8,10 +8,6 @@ import (
 	"api/helpers/responses"
 	"api/helpers/serializers"
 	"github.com/gin-gonic/gin"
-<<<<<<< HEAD
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-=======
->>>>>>> 8140b66 (Code improvements and update mod files)
 )
 
 func Handler(c *gin.Context) {
@@ -25,12 +21,6 @@ func Handler(c *gin.Context) {
 	}
 
 	getByEmailProps := userModel.GetByEmailProps{
-<<<<<<< HEAD
-		GetSession: func() neo4j.Session {
-			return session
-		},
-=======
->>>>>>> 8140b66 (Code improvements and update mod files)
 		GetEmail: func() string {
 			return params.Email
 		},

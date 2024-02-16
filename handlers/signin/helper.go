@@ -86,24 +86,16 @@ func getByEmailFactory(s neo4j.Session, body Body) userModel.GetByEmailProps {
 		return s
 	}
 
-<<<<<<< HEAD
-=======
 	run := func(cypherText string, params httpHelper.JSON) (neo4j.Result, error) {
 		return getSession().Run(cypherText, params)
 	}
 
->>>>>>> 8140b66 (Code improvements and update mod files)
 	getEmail := func() string {
 		return body.Email
 	}
 
 	return userModel.GetByEmailProps{
-<<<<<<< HEAD
-		GetSession: getSession,
-		GetEmail:   getEmail,
-=======
 		Run:      run,
 		GetEmail: getEmail,
->>>>>>> 8140b66 (Code improvements and update mod files)
 	}
 }

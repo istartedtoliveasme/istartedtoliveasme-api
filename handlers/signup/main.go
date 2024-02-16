@@ -9,10 +9,7 @@ import (
 	jwtHelper "api/helpers/jwt-helper"
 	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
-<<<<<<< HEAD
-=======
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
->>>>>>> 8140b66 (Code improvements and update mod files)
 	"os"
 )
 
@@ -21,16 +18,12 @@ func Handler(c *gin.Context) {
 	var jwtClaims httpHelper.JSON
 
 	_, session := configs.StartNeo4jDriver()
-<<<<<<< HEAD
-	defer session.Close()
-=======
 	defer func(session neo4j.Session) {
 		err := session.Close()
 		if err != nil {
 			c.AbortWithStatusJSON(responses.BadRequest(err.Error(), []error{err}))
 		}
 	}(session)
->>>>>>> 8140b66 (Code improvements and update mod files)
 
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.AbortWithStatusJSON(responses.BadRequest(constants.RequiredMissingFields, []error{err}))

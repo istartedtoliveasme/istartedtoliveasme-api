@@ -16,21 +16,12 @@ type ModelCypherQuery interface {
 	Create(tx neo4j.Transaction) func(c CreateProps) (neo4j.Result, error)
 }
 
-<<<<<<< HEAD
-func GetById(props GetByIdProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
-	cypher := "MATCH (u:User { id: $id }) RETURN u LIMIT 1"
-	params := httpHelper.JSON{"id": props.GetId()}
-
-	result, err := props.GetSession().Run(cypher, params)
-=======
 func GetById(strategy GetByIdProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	cypher := "MATCH (u:User { id: $id }) RETURN u LIMIT 1"
 	params := httpHelper.JSON{"id": strategy.GetId()}
 
 	result, err := strategy.Run(cypher, params)
->>>>>>> 8140b66 (Code improvements and update mod files)
 
 	if err != nil {
 		return userRecord, typings.RecordError{
@@ -58,21 +49,12 @@ func GetById(strategy GetByIdProps) (structures.UserRecord, errorHelper.CustomEr
 	return userRecord, nil
 }
 
-<<<<<<< HEAD
-func GetByEmail(props GetByEmailProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
-	cypher := "MATCH (u:User { email: $email }) RETURN u LIMIT 1"
-	params := httpHelper.JSON{"email": props.GetEmail()}
-
-	result, err := props.GetSession().Run(cypher, params)
-=======
 func GetByEmail(strategy GetByEmailProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	cypher := "MATCH (u:User { email: $email }) RETURN u LIMIT 1"
 	params := httpHelper.JSON{"email": strategy.GetEmail()}
 
 	result, err := strategy.Run(cypher, params)
->>>>>>> 8140b66 (Code improvements and update mod files)
 	if err != nil {
 		return userRecord, typings.RecordError{
 			Message: constants.GetRecordFailed,
@@ -108,22 +90,12 @@ func GetByEmail(strategy GetByEmailProps) (structures.UserRecord, errorHelper.Cu
 	return userRecord, nil
 }
 
-<<<<<<< HEAD
-func Create(props CreateProps) (structures.UserRecord, errorHelper.CustomError) {
-	var userRecord structures.UserRecord
-	var emptyRecord structures.UserRecord
-	tx := props.GetSession()
-	cypher := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
-
-	userRecord, err := props.GetUserData()
-=======
 func Create(strategy CreateProps) (structures.UserRecord, errorHelper.CustomError) {
 	var userRecord structures.UserRecord
 	var emptyRecord structures.UserRecord
 	cypher := "CREATE (u:User { id: $id, firstName: $firstName, lastName: $lastName, email: $email, password: $password }) RETURN u LIMIT 1"
 
 	userRecord, err := strategy.GetUserData()
->>>>>>> 8140b66 (Code improvements and update mod files)
 
 	// if error is nil means the record exist
 	if userRecord != emptyRecord && err == nil {
@@ -133,11 +105,7 @@ func Create(strategy CreateProps) (structures.UserRecord, errorHelper.CustomErro
 		}
 	}
 
-<<<<<<< HEAD
-	input := props.GetUserInput()
-=======
 	input := strategy.GetUserInput()
->>>>>>> 8140b66 (Code improvements and update mod files)
 	params := httpHelper.JSON{
 		"id":        input.Id,
 		"firstName": input.FirstName,
@@ -146,11 +114,7 @@ func Create(strategy CreateProps) (structures.UserRecord, errorHelper.CustomErro
 		"password":  input.Password,
 	}
 
-<<<<<<< HEAD
-	records, err := tx.Run(cypher, params)
-=======
 	records, err := strategy.Run(cypher, params)
->>>>>>> 8140b66 (Code improvements and update mod files)
 
 	if err != nil {
 		return userRecord, typings.RecordError{

@@ -19,13 +19,8 @@ type Neo4jDriverProps interface {
 	getCredentials() Neo4jDriverCredentials
 }
 
-<<<<<<< HEAD
-func Neo4jDriver(props Neo4jDriverProps) (neo4j.Driver, neo4j.Session) {
-	credentials := props.getCredentials()
-=======
 func Neo4jDriver(strategy Neo4jDriverProps) (neo4j.Driver, neo4j.Session) {
 	credentials := strategy.getCredentials()
->>>>>>> 8140b66 (Code improvements and update mod files)
 	// Neo4j 4.0, defaults to no TLS therefore use bolt:// or neo4j://
 	// Neo4j 3.5, defaults to self-signed certificates, TLS on, therefore use bolt+ssc:// or neo4j+ssc://
 	uri := credentials.Uri

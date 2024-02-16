@@ -9,10 +9,6 @@ import (
 	"api/helpers/httpHelper"
 	"api/helpers/responses"
 	"github.com/gin-gonic/gin"
-<<<<<<< HEAD
-	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-=======
->>>>>>> 8140b66 (Code improvements and update mod files)
 )
 
 func CreateHandler(c *gin.Context) {
@@ -38,12 +34,6 @@ func CreateHandler(c *gin.Context) {
 		GetEmail: func() string {
 			return "istartedtoliveasme@gmail.com"
 		},
-<<<<<<< HEAD
-		GetSession: func() neo4j.Session {
-			return session
-		},
-=======
->>>>>>> 8140b66 (Code improvements and update mod files)
 	}
 	userRecord, err := userModel.GetByEmail(getByEmailProps)
 	if err != nil {
